@@ -128,19 +128,29 @@ public class GameGrid
             new int[] { -1, 1 },
         };
 
+        // Removes the repeated use of the long if in-bounds check
+        Func<int[], bool> validPoint = (spot) =>
+        {
+            if (spot[0] > gridMaxCol || spot[0] < 0) return false;
+            if (spot[1] > gridMaxRow || spot[1] < 0) return false;
+            return true;
+        };
+
         int pieceCountsIndex = 0;
         foreach (var direc in direcs)
         {
             int[] newSpot = (int[])move.Clone();
+            int pieceCount = 0;
+
+            do
+            {
+                // Repeated counting done here
+            }
+            while (validPoint(newSpot));
+
             // Gets the first column and row when going in chosen direction
-            int newCol = newSpot[0] + direc[0];
-            int newRow = newSpot[1] + direc[1];
-
-            // Moves to the next direction if this direction is out of array
-            if (newCol > gridMaxCol || newCol < 0 || newRow > gridMaxRow || newRow < 0) continue;
-
-            // Recursive counting
-            // Add counter to pieceCounts
+            pieceCounts[pieceCountsIndex] = pieceCount;
+            pieceCountsIndex++;
 
         }
 
