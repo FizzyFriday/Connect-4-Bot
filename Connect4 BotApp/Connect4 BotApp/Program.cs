@@ -32,9 +32,34 @@ public class GameGrid
         }
     }
 
+    // Runs through the game board, determining where pieces can go
+    public List<int[]> GetAllPossibleMoves()
+    {
+        List<int[]> options = new List<int[]>();
+        for (int col = 0; col < 7; col++)
+        {
+            int currentRow = 5; // Highest row index
+            // Checks if the top spot is empty
+            if (grid[col, currentRow] != " ") continue;
+
+            // Move down gradually, finding the lowest point that is empty as this is where the piece would go
+            while (grid[col, currentRow - 1] == " ")
+            {
+                currentRow--;
+                // Prevents checking negative indices
+                if (currentRow == 0) break;
+            }
+
+            // Set the column and row of the move into an array
+            int[] moveOption = new int[2] { col, currentRow };
+            options.Add(moveOption);
+        }
+        return options;
+    }
+
     public bool MakeMove(int col, string turn)
     {
-        // Get all possible moves
+        List<int[]> moveOptions = GetAllPossibleMoves();
         // Run through all moves, and check if a move's column matches col
         // Make move, and check if game ended. Return the result.
         return false;
