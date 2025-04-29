@@ -44,6 +44,21 @@ public class Node
         this.parentNode = parent;
         potentialChildren = this.gameGrid.GetAllPossibleMoves();
     }
+
+
+    public Node getBestUCTChild()
+    {
+        // Run through each child and potential child
+        // Calculate their uct
+        // return the node with highest uct
+        return null;
+    }
+
+    private double calculateUCT()
+    {
+        // use the UCT formula
+        return -1;
+    }
 }
 
 
