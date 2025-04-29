@@ -240,68 +240,8 @@ public class GameGrid : ICloneable
 
     private bool CheckGameInPlay(int[] move, string turn)
     {
-        int gridMaxCol = grid.GetLength(0)-1;
-        int gridMaxRow = grid.GetLength(1)-1;
-
-        // The gradients to explore each direction
-        int[][] positiveDirecs = new int[][]
-        {
-            [0, 1],
-            [1, 1],
-            [1, 0],
-            [1, -1]
-        };
-
-        // Removes the repeated use of the long if in-bounds check
-        Func<int[], bool> validPoint = (spot) =>
-        {
-            if (spot[0] > gridMaxCol || spot[0] < 0) return false;
-            if (spot[1] > gridMaxRow || spot[1] < 0) return false;
-            return true;
-        };
-
-        // Does the looped counting
-        Func<int[], int[], int> countLoop = (newSpot, gradient) =>
-        {
-            // If this direction isnt valid, return 0
-            if (validPoint(newSpot) == false) return 0;
-
-            int connectedCount = 0;
-
-            // Runs until out of bounds or piece isn't owned by player
-            while (grid[newSpot[0], newSpot[1]] == turn)
-            {
-                connectedCount++;
-                newSpot[0] += gradient[0];
-                newSpot[1] += gradient[1];
-                if (validPoint(newSpot) == false) break;
-            }
-            return connectedCount;
-        };
-
-        // Run through all directions
-        foreach (var direc in positiveDirecs)
-        {
-            // Represents direc in the opposite direction
-            int[] negativeDirec = [direc[0] * -1, direc[1] * -1 ];
-            int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
-
-            // Gets where the 1st next spot is when moving towards the gradient and opposite of it
-            int nextPositiveSpotCol = move[0] + direc[0];
-            int nextPositiveSpotRow = move[1] + direc[1];
-            int nextNegativeSpotCol = move[0] + negativeDirec[0];
-            int nextNegativeSpotRow = move[1] + negativeDirec[1];
-
-            int[] nextPosSpot = [nextPositiveSpotCol, nextPositiveSpotRow];
-            int[] nextNegSpot = [nextNegativeSpotCol, nextNegativeSpotRow];
-
-            pieceCounts += countLoop(nextPosSpot, direc);
-            pieceCounts += countLoop(nextNegSpot, negativeDirec);
-
-            if (pieceCounts >= 4) return false;
-        }
-
-        return true;
+        // Instead use the results from Bot.moveResult()
+        return false;
     }
 }
 
@@ -373,7 +313,6 @@ public static class Bot
         {
             // Compare UCT of all children, and highest uct is picked
             node = node.getBestUCTChild();
-            break;
         }
 
         // node = Leaf
@@ -386,5 +325,72 @@ public static class Bot
 
         // BACKPROGATE
         // Send the rollout results up the tree
+    }
+
+    // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
+    public static string MoveResult(int[] move, string turn)
+    {
+        int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
+        int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
+
+        // The gradients to explore each direction
+        int[][] positiveDirecs = new int[][]
+        {
+            [0, 1],
+            [1, 1],
+            [1, 0],
+            [1, -1]
+        };
+
+        // Removes the repeated use of the long if in-bounds check
+        Func<int[], bool> validPoint = (spot) =>
+        {
+            if (spot[0] > gridMaxCol || spot[0] < 0) return false;
+            if (spot[1] > gridMaxRow || spot[1] < 0) return false;
+            return true;
+        };
+
+        // Does the looped counting
+        Func<int[], int[], int> countLoop = (newSpot, gradient) =>
+        {
+            // If this direction isnt valid, return 0
+            if (validPoint(newSpot) == false) return 0;
+
+            int connectedCount = 0;
+
+            // Runs until out of bounds or piece isn't owned by player
+            while (gameGrid.grid[newSpot[0], newSpot[1]] == turn)
+            {
+                connectedCount++;
+                newSpot[0] += gradient[0];
+                newSpot[1] += gradient[1];
+                if (validPoint(newSpot) == false) break;
+            }
+            return connectedCount;
+        };
+
+        // Run through all directions
+        foreach (var direc in positiveDirecs)
+        {
+            // Represents direc in the opposite direction
+            int[] negativeDirec = [direc[0] * -1, direc[1] * -1];
+            int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
+
+            // Gets where the 1st next spot is when moving towards the gradient and opposite of it
+            int nextPositiveSpotCol = move[0] + direc[0];
+            int nextPositiveSpotRow = move[1] + direc[1];
+            int nextNegativeSpotCol = move[0] + negativeDirec[0];
+            int nextNegativeSpotRow = move[1] + negativeDirec[1];
+
+            int[] nextPosSpot = [nextPositiveSpotCol, nextPositiveSpotRow];
+            int[] nextNegSpot = [nextNegativeSpotCol, nextNegativeSpotRow];
+
+            pieceCounts += countLoop(nextPosSpot, direc);
+            pieceCounts += countLoop(nextNegSpot, negativeDirec);
+
+            if (pieceCounts >= 4) return "";
+        }
+
+        return "";
     }
 }
