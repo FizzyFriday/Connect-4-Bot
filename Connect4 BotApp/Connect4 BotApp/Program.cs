@@ -283,6 +283,13 @@ public static class Bot
 
         // SEARCH
         // Searches through the tree until reaching a leaf node - no children
+        while (node.children.Count > 0)
+        {
+            // Compare UCT of all children, and highest uct is picked
+            break;
+        }
+
+        // node = Leaf
 
         // EXPAND
         // Unless a node that ends the game, add a random node to tree
