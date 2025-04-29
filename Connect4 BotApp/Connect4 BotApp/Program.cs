@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 
 // Represents the nodes of the tree
@@ -135,9 +136,20 @@ public class GameGrid
         // Does the looped counting
         Func<int[], int[], int> countLoop = (newSpot, gradient) =>
         {
-            int loopPieceCount = 0;
+            // If this direction isnt valid, return 0
+            if (validPoint(newSpot) == false) return 0;
 
-            return loopPieceCount;
+            int connectedCount = 0;
+
+            // Runs until out of bounds or piece isn't owned by player
+            while (grid[newSpot[0], newSpot[1]] == turn)
+            {
+                connectedCount++;
+                newSpot[0] += gradient[0];
+                newSpot[1] += gradient[1];
+                if (validPoint(newSpot) == false) break;
+            }
+            return connectedCount;
         };
 
         // Run through all directions
@@ -156,9 +168,10 @@ public class GameGrid
             int[] nextPosSpot = new int[2] { nextPositiveSpotCol, nextPositiveSpotRow };
             int[] nextNegSpot = new int[2] { nextNegativeSpotCol, nextNegativeSpotRow };
 
+            pieceCounts += countLoop(nextPosSpot, direc);
+            pieceCounts += countLoop(nextNegSpot, negativeDirec);
 
-            // Set pieceCount to the result of countLoop for direc
-            // Add the result of countLoop for negativeDirec
+            Console.WriteLine($"Direction {direc[0]}, {direc[1]}. {pieceCounts}p");
 
             // If pieceCount >= 4, return false
         }
