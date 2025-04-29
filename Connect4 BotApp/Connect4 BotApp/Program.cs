@@ -57,15 +57,35 @@ public class Node
             childrenAndPotential.Add(node);
         }
 
+        // Creates a node for all potential children
         foreach (int[] move in this.potentialChildren)
         {
-            // The GameGrid after the move and the new turn is required
-            //Node potentialChild = new Node();
+            GameGrid postGrid = getPostMoveGrid();
+            string postTurn = getSwitchedTurn();
+
+            // Creates a temporarily used node. Isn't added to the tree
+            Node potentialChild = new Node(postGrid, postTurn, move, this);
         }
+
         // Run through each child and potential child
         // Calculate their uct
         // return the node with highest uct
         return null;
+    }
+
+    // Gets what the grid will look like after the move
+    private GameGrid getPostMoveGrid()
+    {
+        GameGrid postMoveGrid = (GameGrid)this.gameGrid.Clone();
+        postMoveGrid.MakeMove(this.move[0], this.turn);
+        return postMoveGrid;
+    }
+
+    // Returns the turn of children, by switching
+    private string getSwitchedTurn()
+    {
+        if (this.turn == "X") return "O";
+        return "X";
     }
 
     private double calculateUCT()
