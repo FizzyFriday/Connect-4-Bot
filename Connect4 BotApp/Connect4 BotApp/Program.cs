@@ -2,6 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
+// MakeMove in getPostMoveGrid is ending the
+// Root has no children when entering MCTS
+
 
 // Represents the nodes of the tree
 public class Node
@@ -96,8 +99,28 @@ public class Node
 
     private double calculateUCT()
     {
-        // use the UCT formula
-        return -1;
+        // Uses the UCT formula
+
+        // Impacts whether UCT will prefer proven good paths, or exploring new ones
+        double explorationParameter = Math.Sqrt(2);
+
+        int sims = simCount;
+        if (sims == 0) sims = 1;
+
+        double winPref = resultPoints / sims;
+
+        // epsilon prevents the naturalLog in producing 0
+        const double epsilon = 1e-6;
+        double parentSims;
+        // If parent exists, use the parents sim count, otherwise just reuse sims
+        if (this.parentNode != null) parentSims = this.parentNode.simCount;
+        else parentSims = sims;
+
+        double naturalLog = Math.Log(parentSims + epsilon);
+        double explorePref = explorationParameter * Math.Sqrt(naturalLog / sims);
+
+        Console.WriteLine($"wP {winPref}. NatLog {naturalLog}. exP {explorePref}. totSims {sims}");
+        return winPref + explorePref;
     }
 }
 
@@ -319,6 +342,7 @@ public static class Bot
         int allowedMCTSReps = 10;
         int MCTSran = 0;
         Node root = new Node(gameGrid, turn);
+        
 
         // Runs 500 times, and adds to the counter
         while (MCTSran < allowedMCTSReps)
@@ -341,6 +365,7 @@ public static class Bot
         while (node.children.Count > 0)
         {
             // Compare UCT of all children, and highest uct is picked
+            node = node.getBestUCTChild();
             break;
         }
 
