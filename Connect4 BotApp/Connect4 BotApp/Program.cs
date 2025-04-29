@@ -23,6 +23,8 @@ public class GameGrid
     public GameGrid(int colCount, int rowCount)
     {
         grid = new string[colCount, rowCount];
+
+        // Sets each position of board to represent an empty piece
         for (int c = 0; c < colCount; c++)
         {
             for (int r = 0; r < rowCount; r++)
@@ -57,11 +59,50 @@ public class GameGrid
         return options;
     }
 
+    // Displays the game on screen
+    public void DisplayGame()
+    {
+        // Moves down the rows
+        for (int r = 5; r >= 0; r--)
+        {
+            Console.WriteLine(new string('-', 43)); // Header of row index "r"
+            string rowContent = "";
+
+            // Row contents
+            for (int c = 0; c < 7; c++) 
+            {
+                rowContent += $"|  {grid[c, r]}  ";
+            }
+            rowContent += "|";
+
+            Console.WriteLine(rowContent);
+        }
+        Console.WriteLine(new string('-', 43)); // Table bottom
+
+        /*
+         *    .....
+         *    -------------------     Header of row index 1
+         *    |  X  |     |  O  |     Row contents
+         *    -------------------     Header of row index 0
+         *    |     |     |  X  |     Row contents
+         *    -------------------     Table bottom
+         * 
+         */
+    }
+
     public bool MakeMove(int col, string turn)
     {
         List<int[]> moveOptions = GetAllPossibleMoves();
-        // Run through all moves, and check if a move's column matches col
-        // Make move, and check if game ended. Return the result.
+
+        foreach (int[] moveOption in moveOptions)
+        {
+            // If the chosen move is a possible move
+            if (col == moveOption[0])
+            { 
+                // Make move
+                // Check if game ended. Return result
+            }
+        }
         return false;
     }
 }
@@ -84,8 +125,8 @@ public static class Bot
 
         while (gameRunning)
         {
-            // Display the board
-
+            gameGrid.DisplayGame();
+            MCTS();
             // Gets user input on their move
             int col = Convert.ToInt16(Console.ReadLine());
             // Makes move on gameGrid, and checks if game ended
