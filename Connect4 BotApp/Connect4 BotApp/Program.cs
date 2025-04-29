@@ -6,17 +6,37 @@ using System.Xml.Linq;
 // Represents the nodes of the tree
 public class Node
 {
-    // Contains the children
-    public List<Node> children = new List<Node>();
+    // A total of the results from playouts (+= 1 from win, += 0.5 from draw)
+    private double resultPoints = 0;
+    // Represents the total playouts
+    private int simCount = 0;
 
     // Contains the state of the game after this node's move
     // Eg, win, draw, defeat, still playing
-    public string postMoveGameState = "";
+    public string postMoveState = "";
+
+    // Contains the children
+    public List<Node> children = new List<Node>();
+
+    public string turn;
+    public int[] move;
+    public Node? parentNode;
+    // Represents what the board looks like for this node
+    public GameGrid gameGrid;
+
+
+    public Node(GameGrid gameGrid, string turn, int[] move, Node? parent)
+    {
+        this.gameGrid = (GameGrid)gameGrid.Clone();
+        this.turn = turn;
+        this.move = move;
+        this.parentNode = parent;
+    }
 }
 
 
 // Contains the game board, and helping functions such as display
-public class GameGrid
+public class GameGrid : ICloneable
 {
     // 2D array representing the game board and pieces
     public string[,] grid;
@@ -33,6 +53,16 @@ public class GameGrid
                 grid[c, r] = " ";
             }
         }
+    }
+
+    // Deep copies a GameGrid object
+    public object Clone()
+    {
+        var newObj = new GameGrid(this.grid.GetLength(0), this.grid.GetLength(1))
+        {
+            grid = (string[,])grid.Clone()
+        };
+        return newObj;
     }
 
     // Runs through the game board, determining where pieces can go
@@ -119,10 +149,10 @@ public class GameGrid
         // The gradients to explore each direction
         int[][] positiveDirecs = new int[][]
         {
-            new int[] { 0, 1 },
-            new int[] { 1, 1 },
-            new int[] { 1, 0 },
-            new int[] { 1, -1 },
+            [0, 1],
+            [1, 1],
+            [1, 0],
+            [1, -1]
         };
 
         // Removes the repeated use of the long if in-bounds check
@@ -156,7 +186,7 @@ public class GameGrid
         foreach (var direc in positiveDirecs)
         {
             // Represents direc in the opposite direction
-            int[] negativeDirec = new int[2] { direc[0] * -1, direc[1] * -1 };
+            int[] negativeDirec = [direc[0] * -1, direc[1] * -1 ];
             int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
 
             // Gets where the 1st next spot is when moving towards the gradient and opposite of it
@@ -165,8 +195,8 @@ public class GameGrid
             int nextNegativeSpotCol = move[0] + negativeDirec[0];
             int nextNegativeSpotRow = move[1] + negativeDirec[1];
 
-            int[] nextPosSpot = new int[2] { nextPositiveSpotCol, nextPositiveSpotRow };
-            int[] nextNegSpot = new int[2] { nextNegativeSpotCol, nextNegativeSpotRow };
+            int[] nextPosSpot = [nextPositiveSpotCol, nextPositiveSpotRow];
+            int[] nextNegSpot = [nextNegativeSpotCol, nextNegativeSpotRow];
 
             pieceCounts += countLoop(nextPosSpot, direc);
             pieceCounts += countLoop(nextNegSpot, negativeDirec);
@@ -192,7 +222,7 @@ public static class Bot
     {
         // Creates an empty board with 7 columns, 6 rows
         gameGrid = new GameGrid(7, 6);
-        root = new Node();
+        //root = new Node(); Root may need a unique constructor
 
         while (gameRunning)
         {
