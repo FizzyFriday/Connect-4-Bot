@@ -226,7 +226,6 @@ public static class Bot
 { 
     public static int maxDepth = 3;
     public static GameGrid gameGrid;
-    public static Node root;
     public static bool gameRunning = true;
     private static string turn = "X";
 
@@ -234,12 +233,12 @@ public static class Bot
     {
         // Creates an empty board with 7 columns, 6 rows
         gameGrid = new GameGrid(7, 6);
-        //root = new Node(); Root may need a unique constructor
 
         while (gameRunning)
         {
             Console.Clear();
             gameGrid.DisplayGame();
+            MCTSmanager();
             Console.WriteLine($"Player {turn}, enter column (0-6)");
 
             // Gets user input on their move
@@ -258,14 +257,30 @@ public static class Bot
     }
 
     // Manages the repetitions of MCTS, calling the MCTS function
+    // Deals with the results of MCTS
     static void MCTSmanager()
-    { 
-    
+    {
+        // The allowed repetitions of mcts
+        int allowedMCTSReps = 10;
+        int MCTSran = 0;
+        Node root = new Node(gameGrid, turn);
+
+        // Runs 500 times, and adds to the counter
+        while (MCTSran < allowedMCTSReps)
+        {
+            MCTS(root);
+            MCTSran++;
+        }
+
+        // Use the results
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
     static void MCTS(Node node)
-    { 
+    {
+        // node = Root
+        Console.WriteLine("MCTS called");
+
         // SEARCH
         // Searches through the tree until reaching a leaf node - no children
 
