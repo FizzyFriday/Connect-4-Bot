@@ -2,8 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
-// MakeMove in getPostMoveGrid is ending the
-// Root has no children when entering MCTS
 
 
 // Represents the nodes of the tree
@@ -36,6 +34,14 @@ public class Node
     {
         this.gameGrid = gameGrid;
         this.turn = turn;
+
+        // Adds children of root to the tree
+        List<int[]> possibleMoves = this.gameGrid.GetAllPossibleMoves();
+        foreach (int[] move in possibleMoves)
+        {
+            Node child = new Node(this.gameGrid, turn, move, this);
+            this.children.Add(child);
+        }
     }
 
     // Main constructor
