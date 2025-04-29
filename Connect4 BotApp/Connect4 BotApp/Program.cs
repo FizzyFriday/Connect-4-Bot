@@ -112,21 +112,16 @@ public class GameGrid
 
     private bool CheckGameInPlay(int[] move, string turn)
     {
-        int[] pieceCounts = new int[8];
         int gridMaxCol = grid.GetLength(0)-1;
         int gridMaxRow = grid.GetLength(1)-1;
 
         // The gradients to explore each direction
-        int[][] direcs = new int[][]
+        int[][] positiveDirecs = new int[][]
         {
             new int[] { 0, 1 },
             new int[] { 1, 1 },
             new int[] { 1, 0 },
             new int[] { 1, -1 },
-            new int[] { 0, -1 },
-            new int[] { -1, -1 },
-            new int[] { -1, 0 },
-            new int[] { -1, 1 },
         };
 
         // Removes the repeated use of the long if in-bounds check
@@ -137,40 +132,36 @@ public class GameGrid
             return true;
         };
 
-        // The index to put the piece count into
-        int pieceCountsIndex = 0;
+        // Does the looped counting
+        Func<int[], int[], int> countLoop = (newSpot, gradient) =>
+        {
+            int loopPieceCount = 0;
+
+            return loopPieceCount;
+        };
+
         // Run through all directions
-        foreach (var direc in direcs)
+        foreach (var direc in positiveDirecs)
         {
-            int[] newSpot = (int[])move.Clone();
-            int pieceCount = 0;
+            // Represents direc in the opposite direction
+            int[] negativeDirec = new int[2] { direc[0] * -1, direc[1] * -1 };
+            int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
 
-            do
-            {
-                Console.WriteLine($"Checking {newSpot[0]}, {newSpot[1]}");
-                // If the piece matches the player's piece, add to count. Else end loop
-                if (grid[newSpot[0], newSpot[1]] == turn) pieceCount++;
-                else break;
+            // Gets where the 1st next spot is when moving towards the gradient and opposite of it
+            int nextPositiveSpotCol = move[0] + direc[0];
+            int nextPositiveSpotRow = move[1] + direc[1];
+            int nextNegativeSpotCol = move[0] + negativeDirec[0];
+            int nextNegativeSpotRow = move[1] + negativeDirec[1];
 
-                // Move to next spot
-                newSpot[0] += direc[0];
-                newSpot[1] += direc[1];
-            }
-            while (validPoint(newSpot));
+            int[] nextPosSpot = new int[2] { nextPositiveSpotCol, nextPositiveSpotRow };
+            int[] nextNegSpot = new int[2] { nextNegativeSpotCol, nextNegativeSpotRow };
 
-            // Gets the first column and row when going in chosen direction
-            pieceCounts[pieceCountsIndex] = pieceCount;
-            pieceCountsIndex++;
 
+            // Set pieceCount to the result of countLoop for direc
+            // Add the result of countLoop for negativeDirec
+
+            // If pieceCount >= 4, return false
         }
-
-        // For testing
-        for (int i = 0; i < pieceCounts.Length; i++)
-        {
-            Console.WriteLine(pieceCounts[i]);
-        }
-
-        // Use the values in pieceCounts to determine if there is 4 in a row
 
         return true;
     }
@@ -195,9 +186,11 @@ public static class Bot
         while (gameRunning)
         {
             gameGrid.DisplayGame();
+            Console.WriteLine($"Player {turn}, enter column (0-6)");
 
             // Gets user input on their move
             int col = Convert.ToInt16(Console.ReadLine());
+            Console.WriteLine("");
             // Makes move on gameGrid, and checks if game ended
             gameRunning = gameGrid.MakeMove(col, turn);
 
