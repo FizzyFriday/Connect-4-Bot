@@ -328,7 +328,7 @@ public static class Bot
     }
 
     // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
-    public static string MoveResult(int[] move, string nodeTurn)
+    public static string MoveResult(Node node)
     {
         int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
         int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
@@ -377,8 +377,8 @@ public static class Bot
             int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
 
             // Gets where the 1st next spot is when moving towards the gradient and opposite of it
-            int[] posNext = [move[0] + direc[0], move[1] + direc[1]];
-            int[] negNext = [move[0] + negativeDirec[0], move[1] + negativeDirec[1]];
+            int[] posNext = [node.move[0] + direc[0], node.move[1] + direc[1]];
+            int[] negNext = [node.move[0] + negativeDirec[0], node.move[1] + negativeDirec[1]];
 
             // Adds the count of connected pieces
             pieceCounts += countLoop(posNext, direc);
@@ -388,13 +388,17 @@ public static class Bot
             if (pieceCounts >= 4)
             {
                 // The turn doesn't match the player - Enemy made the 4
-                if (nodeTurn != turn) return "W"; // L
+                if (node.turn != turn) return "W"; // L
 
                 // turn matches the player - player made the 4
-                if (nodeTurn == turn) return "L";
+                if (node.turn == turn) return "L";
             }
         }
-        // Either a Draw or Still in play here
-        return "";
+        
+        // If there are no possible moves, and wasnt a Win or Loss, it must be a draw
+        if (node.gameGrid.GetAllPossibleMoves().Count == 0) return "D";
+
+        // Otherwise, still in play
+        return "IP";
     }
 }
