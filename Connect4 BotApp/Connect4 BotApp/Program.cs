@@ -328,7 +328,7 @@ public static class Bot
     }
 
     // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
-    public static string MoveResult(int[] move, string turn)
+    public static string MoveResult(int[] move, string nodeTurn)
     {
         int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
         int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
@@ -377,20 +377,24 @@ public static class Bot
             int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
 
             // Gets where the 1st next spot is when moving towards the gradient and opposite of it
-            int nextPositiveSpotCol = move[0] + direc[0];
-            int nextPositiveSpotRow = move[1] + direc[1];
-            int nextNegativeSpotCol = move[0] + negativeDirec[0];
-            int nextNegativeSpotRow = move[1] + negativeDirec[1];
+            int[] posNext = [move[0] + direc[0], move[1] + direc[1]];
+            int[] negNext = [move[0] + negativeDirec[0], move[1] + negativeDirec[1]];
 
-            int[] nextPosSpot = [nextPositiveSpotCol, nextPositiveSpotRow];
-            int[] nextNegSpot = [nextNegativeSpotCol, nextNegativeSpotRow];
+            // Adds the count of connected pieces
+            pieceCounts += countLoop(posNext, direc);
+            pieceCounts += countLoop(negNext, negativeDirec);
 
-            pieceCounts += countLoop(nextPosSpot, direc);
-            pieceCounts += countLoop(nextNegSpot, negativeDirec);
+            // A connect 4 was made
+            if (pieceCounts >= 4)
+            {
+                // The turn doesn't match the player - Enemy made the 4
+                if (nodeTurn != turn) return "W"; // L
 
-            if (pieceCounts >= 4) return "";
+                // turn matches the player - player made the 4
+                if (nodeTurn == turn) return "L";
+            }
         }
-
+        // Either a Draw or Still in play here
         return "";
     }
 }
