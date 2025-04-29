@@ -257,8 +257,14 @@ public static class Bot
         Console.WriteLine("Game ended");
     }
 
+    // Manages the repetitions of MCTS, calling the MCTS function
+    static void MCTSmanager()
+    { 
+    
+    }
+
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
-    static void MCTS()
+    static void MCTS(Node node)
     { 
         // SEARCH
         // Searches through the tree until reaching a leaf node - no children
