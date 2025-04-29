@@ -48,6 +48,20 @@ public class Node
 
     public Node getBestUCTChild()
     {
+        // Contains a node for the children and potential children not in the tree
+        List<Node> childrenAndPotential = new List<Node>();
+
+        // Add existing children
+        foreach (Node node in this.children)
+        {
+            childrenAndPotential.Add(node);
+        }
+
+        foreach (int[] move in this.potentialChildren)
+        {
+            // The GameGrid after the move and the new turn is required
+            //Node potentialChild = new Node();
+        }
         // Run through each child and potential child
         // Calculate their uct
         // return the node with highest uct
