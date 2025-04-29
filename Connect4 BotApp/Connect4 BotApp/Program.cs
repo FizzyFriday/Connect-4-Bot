@@ -49,13 +49,7 @@ public class Node
     public Node getBestUCTChild()
     {
         // Contains a node for the children and potential children not in the tree
-        List<Node> childrenAndPotential = new List<Node>();
-
-        // Add existing children
-        foreach (Node node in this.children)
-        {
-            childrenAndPotential.Add(node);
-        }
+        List<Node> childrenAndPotential = new(this.children);
 
         // Creates a node for all potential children
         foreach (int[] move in this.potentialChildren)
@@ -65,12 +59,24 @@ public class Node
 
             // Creates a temporarily used node. Isn't added to the tree
             Node potentialChild = new Node(postGrid, postTurn, move, this);
+            childrenAndPotential.Add(potentialChild);
         }
 
-        // Run through each child and potential child
-        // Calculate their uct
-        // return the node with highest uct
-        return null;
+        double bestUCT = 0;
+        Node best = this.children[0];
+        // Run through all nodes
+        foreach (Node node in childrenAndPotential)
+        {
+            // calculate the uct, and compare to the best
+            double uct = node.calculateUCT();
+            if (uct > bestUCT)
+            {
+                bestUCT = uct;
+                best = node;
+            }
+        }
+        // return the node with the highest uct
+        return best;
     }
 
     // Gets what the grid will look like after the move
