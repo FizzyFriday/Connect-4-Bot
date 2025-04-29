@@ -1,0 +1,41 @@
+# Ignore VS temporary files, user-specific files, and build results, as these arent for developers looking at Github repo
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# NuGet packages
+*.nupkg
+packages/
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# SQL Server files
+*.mdf
+*.ldf
+
+# Others
+*.log
+*.tlog
+*.cache
+*.pdb
+
+# JetBrains Rider
+.idea/
+
+# Mac system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+desktop.ini
