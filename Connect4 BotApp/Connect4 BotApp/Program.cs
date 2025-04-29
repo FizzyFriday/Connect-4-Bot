@@ -105,30 +105,25 @@ public class Node
 
     private double calculateUCT()
     {
-        // Uses the UCT formula
-
-        // Impacts whether UCT will prefer proven good paths, or exploring new ones
+        // Impacts if UCT will favour high winrate, or exploration
         double explorationParameter = Math.Sqrt(2);
 
-        int sims = simCount;
-        if (sims == 0) sims = 1;
-        Console.WriteLine(sims);
+        // If simCount != 0, set selfSims to simCount. Else, set it to 1
+        int selfSims = (simCount == 0) ? 1 : simCount;
 
-        double winPref = resultPoints / sims;
+        // Gets the value of win rate
+        double winPref = resultPoints / selfSims;
 
-        // epsilon prevents the naturalLog in producing 0
+        // Epsilon removes the possibility of Log(1) happening, which produces 0
         const double epsilon = 1e-6;
-        double parentSims = 0;
-        // If parent exists, use the parents sim count, otherwise just reuse sims
-        if (this.parentNode != null) parentSims = this.parentNode.simCount;
-        else parentSims = sims;
-        if (parentSims == 0) parentSims = 1;
-        Console.WriteLine(parentSims);
+        // If parent isnt null, set pSims to the simCount of parent. Else, set it to the same value as selfSims
+        double pSims = (this.parentNode != null) ? this.parentNode.simCount : selfSims;
+        if (pSims == 0) pSims = 1;
 
-        double naturalLog = Math.Log(parentSims + epsilon);
-        double explorePref = explorationParameter * Math.Sqrt(naturalLog / sims);
+        double naturalLog = Math.Log(pSims + epsilon);
+        // Gets the value of exploration
+        double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
 
-        Console.WriteLine($"wP {winPref}. NatLog {naturalLog}. exP {explorePref}. totSims {sims}");
         return winPref + explorePref;
     }
 }
