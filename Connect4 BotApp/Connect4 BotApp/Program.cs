@@ -4,8 +4,13 @@ using System.Runtime.CompilerServices;
 
 // Represents the nodes of the tree
 public class Node
-{ 
-    
+{
+    // Contains the children
+    public List<Node> children = new List<Node>();
+
+    // Contains the state of the game after this node's move
+    // Eg, win, draw, defeat, still playing
+    public string postMoveGameState = "";
 }
 
 
@@ -26,6 +31,14 @@ public class GameGrid
             }
         }
     }
+
+    public bool MakeMove(int col, string turn)
+    {
+        // Get all possible moves
+        // Run through all moves, and check if a move's column matches col
+        // Make move, and check if game ended. Return the result.
+        return false;
+    }
 }
 
 
@@ -42,6 +55,7 @@ public static class Bot
     {
         // Creates an empty board with 7 columns, 6 rows
         gameGrid = new GameGrid(7, 6);
+        root = new Node();
 
         while (gameRunning)
         {
@@ -49,12 +63,27 @@ public static class Bot
 
             // Gets user input on their move
             int col = Convert.ToInt16(Console.ReadLine());
-
-            // Make move on gameGrid, and checks if game ended
+            // Makes move on gameGrid, and checks if game ended
+            gameGrid.MakeMove(col, turn);
 
             if (turn == "X") turn = "O";
             else turn = "X";
         }
     }
 
+    // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
+    static void MCTS()
+    { 
+        // SEARCH
+        // Searches through the tree until reaching a leaf node - no children
+
+        // EXPAND
+        // Unless a node that ends the game, add a random node to tree
+
+        // SIMULATE
+        // Run a rollout
+
+        // BACKPROGATE
+        // Send the rollout results up the tree
+    }
 }
