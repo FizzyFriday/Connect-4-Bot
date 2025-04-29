@@ -112,6 +112,8 @@ public class GameGrid
     private bool CheckIfGameEnded(int[] move, string turn)
     {
         int[] pieceCounts = new int[8];
+        int gridMaxCol = grid.GetLength(0)-1;
+        int gridMaxRow = grid.GetLength(1)-1;
 
         // The gradients to explore each direction
         int[][] direcs = new int[][]
@@ -126,7 +128,21 @@ public class GameGrid
             new int[] { -1, 1 },
         };
 
-        // Run in each direction, and add the counter of matching pieces to pieceCounts
+        int pieceCountsIndex = 0;
+        foreach (var direc in direcs)
+        {
+            int[] newSpot = (int[])move.Clone();
+            // Gets the first column and row when going in chosen direction
+            int newCol = newSpot[0] + direc[0];
+            int newRow = newSpot[1] + direc[1];
+
+            // Moves to the next direction if this direction is out of array
+            if (newCol > gridMaxCol || newCol < 0 || newRow > gridMaxRow || newRow < 0) continue;
+
+            // Recursive counting
+            // Add counter to pieceCounts
+
+        }
 
         // Use the values in pieceCounts to determine if there is 4 in a row
 
