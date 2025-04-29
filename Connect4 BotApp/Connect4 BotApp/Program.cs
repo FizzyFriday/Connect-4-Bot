@@ -171,9 +171,7 @@ public class GameGrid
             pieceCounts += countLoop(nextPosSpot, direc);
             pieceCounts += countLoop(nextNegSpot, negativeDirec);
 
-            Console.WriteLine($"Direction {direc[0]}, {direc[1]}. {pieceCounts}p");
-
-            // If pieceCount >= 4, return false
+            if (pieceCounts >= 4) return false;
         }
 
         return true;
@@ -198,6 +196,7 @@ public static class Bot
 
         while (gameRunning)
         {
+            Console.Clear();
             gameGrid.DisplayGame();
             Console.WriteLine($"Player {turn}, enter column (0-6)");
 
@@ -210,6 +209,10 @@ public static class Bot
             if (turn == "X") turn = "O";
             else turn = "X";
         }
+
+        Console.Clear();
+        gameGrid.DisplayGame();
+        Console.WriteLine("Game ended");
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
