@@ -102,14 +102,15 @@ public class GameGrid
             {
                 // Makes the move
                 grid[col, moveOption[1]] = turn;
+
                 // Checks if the game has ended
-                inPlay = CheckIfGameEnded(moveOption, turn);
+                inPlay = CheckGameInPlay(moveOption, turn);
             }
         }
         return inPlay;
     }
 
-    private bool CheckIfGameEnded(int[] move, string turn)
+    private bool CheckGameInPlay(int[] move, string turn)
     {
         int[] pieceCounts = new int[8];
         int gridMaxCol = grid.GetLength(0)-1;
@@ -136,7 +137,9 @@ public class GameGrid
             return true;
         };
 
+        // The index to put the piece count into
         int pieceCountsIndex = 0;
+        // Run through all directions
         foreach (var direc in direcs)
         {
             int[] newSpot = (int[])move.Clone();
@@ -144,7 +147,14 @@ public class GameGrid
 
             do
             {
-                // Repeated counting done here
+                Console.WriteLine($"Checking {newSpot[0]}, {newSpot[1]}");
+                // If the piece matches the player's piece, add to count. Else end loop
+                if (grid[newSpot[0], newSpot[1]] == turn) pieceCount++;
+                else break;
+
+                // Move to next spot
+                newSpot[0] += direc[0];
+                newSpot[1] += direc[1];
             }
             while (validPoint(newSpot));
 
@@ -154,9 +164,15 @@ public class GameGrid
 
         }
 
+        // For testing
+        for (int i = 0; i < pieceCounts.Length; i++)
+        {
+            Console.WriteLine(pieceCounts[i]);
+        }
+
         // Use the values in pieceCounts to determine if there is 4 in a row
 
-        return false;
+        return true;
     }
 }
 
@@ -183,7 +199,7 @@ public static class Bot
             // Gets user input on their move
             int col = Convert.ToInt16(Console.ReadLine());
             // Makes move on gameGrid, and checks if game ended
-            gameGrid.MakeMove(col, turn);
+            gameRunning = gameGrid.MakeMove(col, turn);
 
             if (turn == "X") turn = "O";
             else turn = "X";
