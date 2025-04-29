@@ -93,16 +93,43 @@ public class GameGrid
     public bool MakeMove(int col, string turn)
     {
         List<int[]> moveOptions = GetAllPossibleMoves();
+        bool inPlay = true;
 
         foreach (int[] moveOption in moveOptions)
         {
             // If the chosen move is a possible move
             if (col == moveOption[0])
-            { 
-                // Make move
-                // Check if game ended. Return result
+            {
+                // Makes the move
+                grid[col, moveOption[1]] = turn;
+                // Checks if the game has ended
+                inPlay = CheckIfGameEnded(moveOption, turn);
             }
         }
+        return inPlay;
+    }
+
+    private bool CheckIfGameEnded(int[] move, string turn)
+    {
+        int[] pieceCounts = new int[8];
+
+        // The gradients to explore each direction
+        int[][] direcs = new int[][]
+        {
+            new int[] { 0, 1 },
+            new int[] { 1, 1 },
+            new int[] { 1, 0 },
+            new int[] { 1, -1 },
+            new int[] { 0, -1 },
+            new int[] { -1, -1 },
+            new int[] { -1, 0 },
+            new int[] { -1, 1 },
+        };
+
+        // Run in each direction, and add the counter of matching pieces to pieceCounts
+
+        // Use the values in pieceCounts to determine if there is 4 in a row
+
         return false;
     }
 }
@@ -126,7 +153,7 @@ public static class Bot
         while (gameRunning)
         {
             gameGrid.DisplayGame();
-            MCTS();
+
             // Gets user input on their move
             int col = Convert.ToInt16(Console.ReadLine());
             // Makes move on gameGrid, and checks if game ended
