@@ -18,19 +18,31 @@ public class Node
     // Contains the children
     public List<Node> children = new List<Node>();
 
+    // Contains the potential children that aren't nodes yet
+    public List<int[]> potentialChildren = new List<int[]>();
+
     public string turn;
-    public int[] move;
+    public int[] move = new int[2];
     public Node? parentNode;
     // Represents what the board looks like for this node
     public GameGrid gameGrid;
 
 
+    // Root constructor. A root doesnt have a move or a parent
+    public Node(GameGrid gameGrid, string turn)
+    {
+        this.gameGrid = gameGrid;
+        this.turn = turn;
+    }
+
+    // Main constructor
     public Node(GameGrid gameGrid, string turn, int[] move, Node? parent)
     {
         this.gameGrid = (GameGrid)gameGrid.Clone();
         this.turn = turn;
         this.move = move;
         this.parentNode = parent;
+        potentialChildren = this.gameGrid.GetAllPossibleMoves();
     }
 }
 
