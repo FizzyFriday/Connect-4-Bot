@@ -1,10 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
-using System.Xml.Schema;
+﻿using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 
 
 
@@ -294,7 +289,7 @@ public class GameGrid : ICloneable
                 if (realMove)
                 {
                     // Get the state of the game after the move
-                    string afterMoveState = Bot.MoveResult(moveOption, turn);
+                    string afterMoveState = Bot.MoveResult(moveOption, turn).endState;
                     // If game not in play - game ended
                     if (afterMoveState != "IP") return false;
                 }
@@ -318,6 +313,13 @@ public static class Bot
         // Creates an empty board with 7 columns, 6 rows
         gameGrid = new GameGrid(7, 6);
 
+        // For testing if the bot chooses to stop a move
+        gameGrid.MakeMove(3, "X", true);
+        gameGrid.MakeMove(2, "X", true);
+        gameGrid.MakeMove(1, "O", true);
+        gameGrid.MakeMove(4, "X", true);
+        turn = "O";
+
         while (gameRunning)
         {
             Console.Clear();
@@ -330,14 +332,17 @@ public static class Bot
             Console.WriteLine("");
             // Makes move onto the game board
             gameRunning = gameGrid.MakeMove(col, turn, true);
+            // If the player won, don't switch turn
+            if (!gameRunning) break;
 
+            // Switch turn
             if (turn == "X") turn = "O";
             else turn = "X";
         }
 
         Console.Clear();
         gameGrid.DisplayGame();
-        Console.WriteLine("Game ended");
+        Console.WriteLine($"Game ended. Player {turn} won.");
     }
 
     // Manages the repetitions of MCTS, calling the MCTS function
@@ -355,27 +360,41 @@ public static class Bot
         Stopwatch timer = new Stopwatch();
         timer.Start();
 
-        int allowed = 5;
-        while (timer.Elapsed.TotalSeconds < permittedDuration && MCTScycles < allowed)
+        int bestCol = -1;
+
+        // Runs through all the possible moves, and checks if the move results in a Loss or Win
+        Func<int> ObviousBestCheck = () =>
         {
-            MCTS(root);
+            // Grabs all possible moves
+            List<int[]> possible = root.gameGrid.GetValidMoves();
+            int bestCol = 0;
 
-            // After each iteration, displays important info for each direct child of root
-            Console.WriteLine($"Total children: {root.children.Count}");
-            for (int i = 0; i < root.children.Count; i++)
+            // Run through each move
+            foreach (int[] possibleMove in possible)
             {
-                Node directChild = root.children[i];
-                Console.WriteLine($"Sim count of column {i}: {directChild.simCount}");
-                Console.WriteLine($"Win rate of column {i}: {directChild.resultPoints / directChild.simCount}");
-                Console.WriteLine($"$UCT of column {i}: { directChild.CalculateUCT()}");
+                // Get the move result cache
+                var result = MoveResult(possibleMove, turn);
+                
+                // If there is a game ending move, the best move is to stop it
+                // BUT if there is a win, this is even better and instantly returns
+                if (result.endState == "L") bestCol = possibleMove[0];
+                if (result.endState == "W") return possibleMove[0];
             }
-            Console.WriteLine("");
-            MCTScycles++;
-        }
+            return bestCol;
+        };
 
-        // The child of root with most simulations is best move
-        Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles/timer.Elapsed.TotalSeconds}per/s");
-        
+
+        ObviousBestCheck();
+        // If there was no change to the best move in the lamba function
+        if (bestCol == -1)
+        {
+            // Run MCTS for the allowed time
+            while (timer.Elapsed.TotalSeconds < permittedDuration)
+            {
+                MCTS(root);
+                MCTScycles++;
+            }
+        }        
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
@@ -422,8 +441,7 @@ public static class Bot
 
         // SIMULATE
         // Get the results of the simulation
-        var resultAndHeuristic = MoveResult(node);
-        Console.WriteLine(resultAndHeuristic.value);
+        var heuristic = Rollout(node);
 
         // BACKPROGATE - Send the results up the tree
         // Runs up the tree
@@ -431,23 +449,23 @@ public static class Bot
         {
             // Save the result to each node
             node.simCount++;
-            node.resultPoints += resultAndHeuristic.value;
+            node.resultPoints += heuristic;
             // Move up to parent
             node = node.parentNode;
         }
 
         // Node is now the root
         node.simCount++;
-        node.resultPoints += resultAndHeuristic.value;
+        node.resultPoints += heuristic;
     }
 
 
     // Calls MoveResult, providing the necessary data as a Node
-    public static string MoveResult(int[] move, string moveTurn)
+    public static (string endState, double value) MoveResult(int[] move, string moveTurn)
     {
         Node translatedNode = new Node((GameGrid)gameGrid.Clone(), moveTurn, move, null);
         var resultCache = MoveResult(translatedNode);
-        return resultCache.endState;
+        return resultCache;
     }
 
     // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
@@ -482,7 +500,7 @@ public static class Bot
             int connectedCount = 0;
 
             // Runs until out of bounds or piece isn't owned by player
-            while (node.gameGrid.grid[newSpot[0], newSpot[1]] == turn)
+            while (node.gameGrid.grid[newSpot[0], newSpot[1]] == node.turn)
             {
                 connectedCount++;
                 newSpot[0] += gradient[0];
@@ -520,8 +538,7 @@ public static class Bot
         // A draw/in play could range from 0.4 to 0.6 instead of only 0.5
         // This makes better moves more valuable and gives the winrate calculating
         // in CalculateUCT be more accurate
-        Console.WriteLine($"Most {mostConnected}");
-        double[] heuristicValues = [0, 0.05, 0.1];
+        double[] heuristicValues = [0, 0.05, 0.15];
 
         if (mostConnected >= 4)
         {
@@ -532,6 +549,7 @@ public static class Bot
 
         // Get the heuristic change to make
         double heuristicChange = heuristicValues[mostConnected - 1];
+        heuristicChange = 0;
         // Return the general state of the game and the heuristic
         if (node.gameGrid.GetValidMoves().Count == 0) return ("D", 0.5 + heuristicChange);
         else return ("IP", 0.5 + heuristicChange);
@@ -549,10 +567,10 @@ public static class Bot
             rolled = rolled.GetRandPotential();
 
             // Gets the state of the game after node
-            var result = MoveResult(rolled);
+            var resultAndHeuristic = MoveResult(rolled);
 
             // Game ending, return result
-            if (result.endState != "IP") return result.value;
+            if (resultAndHeuristic.endState != "IP") return resultAndHeuristic.value;
         }
         return 0;
     }
