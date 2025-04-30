@@ -355,7 +355,7 @@ public static class Bot
         Stopwatch timer = new Stopwatch();
         timer.Start();
 
-        int allowed = 30;
+        int allowed = 5;
         while (timer.Elapsed.TotalSeconds < permittedDuration && MCTScycles < allowed)
         {
             MCTS(root);
@@ -417,32 +417,27 @@ public static class Bot
             // A node can't run SIMULATION if it ends the game
             if (node.postMoveState != "IP") return;
         }
-        
-        
+
+
 
         // SIMULATE
         // Get the results of the simulation
-        string result = Rollout(node);
+        var resultAndHeuristic = MoveResult(node);
 
         // BACKPROGATE - Send the results up the tree
-        double resultPoints = 0;
-        // Assign the rollout result to a number
-        if (result == "W") resultPoints = 1;
-        if (result == "D") resultPoints = 0.5;
-
         // Runs up the tree
         while (node.parentNode != null)
         {
             // Save the result to each node
             node.simCount++;
-            node.resultPoints += resultPoints;
+            node.resultPoints += resultAndHeuristic.value;
             // Move up to parent
             node = node.parentNode;
         }
 
         // Node is now the root
         node.simCount++;
-        node.resultPoints += resultPoints;
+        node.resultPoints += resultAndHeuristic.value;
     }
 
 
@@ -450,11 +445,12 @@ public static class Bot
     public static string MoveResult(int[] move, string moveTurn)
     {
         Node translatedNode = new Node((GameGrid)gameGrid.Clone(), moveTurn, move, null);
-        return MoveResult(translatedNode);
+        var resultCache = MoveResult(translatedNode);
+        return resultCache.endState;
     }
 
     // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
-    public static string MoveResult(Node node)
+    public static (string endState, double value) MoveResult(Node node)
     {
         int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
         int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
@@ -495,6 +491,7 @@ public static class Bot
             return connectedCount;
         };
 
+        int mostConnected = 1;
         // Run through all directions
         foreach (var direc in positiveDirecs)
         {
@@ -510,26 +507,36 @@ public static class Bot
             pieceCounts += countLoop(posNext, direc);
             pieceCounts += countLoop(negNext, negativeDirec);
 
-            // A connect 4 was made
-            if (pieceCounts >= 4)
+            // Saves the highest number of connections made
+            if (pieceCounts > mostConnected)
             {
-                // The turn doesn't match the player - Enemy made the 4
-                if (node.turn != turn) return "W"; // L
-
-                // turn matches the player - player made the 4
-                if (node.turn == turn) return "L";
+                mostConnected = pieceCounts;
             }
         }
-        
-        // If there are no possible moves, and wasnt a Win or Loss, it must be a draw
-        if (node.gameGrid.GetValidMoves().Count == 0) return "D";
 
-        // Otherwise, still in play
-        return "IP";
+        // The heuristic value of how long connections are
+        // The larger the connection made, the bigger change to value.
+        // A draw/in play could range from 0.4 to 0.6 instead of only 0.5
+        // This makes better moves more valuable and gives the winrate calculating
+        // in CalculateUCT be more accurate
+        double[] heuristicValues = [0, 0.05, 0.1];
+
+        if (mostConnected >= 4)
+        {
+            // If the game has ended and the winner is clear
+            if (node.turn == turn) return ("W", 1);
+            else return ("L", 0);
+        }
+
+        // Get the heuristic change to make
+        double heuristicChange = heuristicValues[mostConnected - 1];
+        // Return the general state of the game and the heuristic
+        if (node.gameGrid.GetValidMoves().Count == 0) return ("D", 0.5 + heuristicChange);
+        else return ("IP", 0.5 + heuristicChange);
     }
 
     // Randomly searches until hitting a game ending result
-    private static string Rollout(Node node)
+    private static double Rollout(Node node)
     {
         Node rolled = node;
 
@@ -540,12 +547,11 @@ public static class Bot
             rolled = rolled.GetRandPotential();
 
             // Gets the state of the game after node
-            string result = MoveResult(rolled);
+            var result = MoveResult(rolled);
 
             // Game ending, return result
-            if (result != "IP") return result;
+            if (result.endState != "IP") return result.value;
         }
-        // If the search hit a deadend with no moves, its a draw
-        return "D";
+        return 0;
     }
 }
