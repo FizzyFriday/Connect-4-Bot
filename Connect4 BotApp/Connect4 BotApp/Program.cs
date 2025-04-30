@@ -400,7 +400,7 @@ public static class Bot
         {
             // Choose a random potential child
             node = node.GetRandPotential();
-            node.postMoveState = MoveResult(node);
+            node.postMoveState = MoveResult(node).endState;
             node.AddToTree();
             // Prevent simulating if the node ends the game
             if (node.postMoveState != "IP") return;
@@ -409,7 +409,7 @@ public static class Bot
         if (!node.GetInTree() || node.parentNode == null)
         {
             // Get the state of game after the node's move
-            node.postMoveState = MoveResult(node);
+            node.postMoveState = MoveResult(node).endState;
             // Add to tree
             node.AddToTree();
             // Remove from leaf's potential children
@@ -423,6 +423,7 @@ public static class Bot
         // SIMULATE
         // Get the results of the simulation
         var resultAndHeuristic = MoveResult(node);
+        Console.WriteLine(resultAndHeuristic.value);
 
         // BACKPROGATE - Send the results up the tree
         // Runs up the tree
@@ -481,7 +482,7 @@ public static class Bot
             int connectedCount = 0;
 
             // Runs until out of bounds or piece isn't owned by player
-            while (gameGrid.grid[newSpot[0], newSpot[1]] == turn)
+            while (node.gameGrid.grid[newSpot[0], newSpot[1]] == turn)
             {
                 connectedCount++;
                 newSpot[0] += gradient[0];
@@ -519,6 +520,7 @@ public static class Bot
         // A draw/in play could range from 0.4 to 0.6 instead of only 0.5
         // This makes better moves more valuable and gives the winrate calculating
         // in CalculateUCT be more accurate
+        Console.WriteLine($"Most {mostConnected}");
         double[] heuristicValues = [0, 0.05, 0.1];
 
         if (mostConnected >= 4)
