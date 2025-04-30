@@ -38,7 +38,7 @@ public class Node
         this.turn = turn;
 
         // Adds children of root to the tree
-        List<int[]> possibleMoves = this.gameGrid.GetAllPossibleMoves();
+        List<int[]> possibleMoves = this.gameGrid.GetValidMoves();
         foreach (int[] move in possibleMoves)
         {
             Node child = new Node(this.gameGrid, turn, move, this);
@@ -115,19 +115,33 @@ public class Node
 
     // Makes adding to the tree simpler in the Bot class
     public void AddToTree()
-    { 
-        // Checks if the node has a parent (node isnt root)
-        if (this.parentNode != null)
+    {
+        // Checks if node has parent
+        if (this.parentNode == null)
         {
-            // References parent node
-            Node parent = this.parentNode;
-            // Adds to tree
-            parent.children.Add(this);
-
-            // Since when adding to tree, this is no longer a *potential* child, 
-            // it would be removed from the list of potentialChildren
-            parent.potentialChildren.Remove(this.move);
+            throw new Exception("Error in Node.AddToTree() - Attempted to add a node without a parent");
         }
+
+        // References parent node
+        Node parent = this.parentNode;
+        // Adds to tree
+        parent.children.Add(this);
+
+        // Since when adding to tree, this is no longer a *potential* child, 
+        // it would be removed from the list of potentialChildren
+        parent.potentialChildren.Remove(this.move);
+    }
+
+    public bool GetInTree()
+    {
+        if (this.parentNode == null)
+        {
+            throw new Exception("Error in Node.GetInTree() - Node has no parent. Perhaps a root?");
+        }
+
+        // Checks if the parent has this node as a child in tree
+        if (this.parentNode.children.Contains(this)) return true;
+        else return false;
     }
 
 
@@ -264,8 +278,7 @@ public class GameGrid : ICloneable
     // realMove indicates if this is a move that should be made to the current game
     public bool MakeMove(int col, string turn, bool realMove=false)
     {
-        
-        List<int[]> moveOptions = GetAllPossibleMoves();
+        List<int[]> moveOptions = GetValidMoves();
 
         foreach (int[] moveOption in moveOptions)
         {
@@ -295,7 +308,6 @@ public static class Bot
     public static GameGrid gameGrid;
     public static bool gameRunning = true;
     private static string turn = "X";
-    private static Node root;
 
     static void Main()
     {
@@ -332,7 +344,6 @@ public static class Bot
         int allowedMCTSReps = 10;
         int MCTSran = 0;
         Node root = new Node(gameGrid, turn);
-        
 
         // Runs 500 times, and adds to the counter
         while (MCTSran < allowedMCTSReps)
@@ -360,28 +371,27 @@ public static class Bot
 
         // EXPAND
         // Unless a node that ends the game, add a random node to tree
-        Node leaf = node;
 
         // This leaf isn't in the tree, so add to tree
-        if (leaf.parentNode == null) return; // Shouldn't run as leaf shouldn't be the root because of SEARCH
-        if (leaf.parentNode.children.Contains(leaf) == false)
+        if (node.parentNode == null) return; // Shouldn't run as leaf shouldn't be the root because of SEARCH
+        if (node.GetInTree())
         {
             // Get the state of game after the node's move
-            leaf.postMoveState = MoveResult(leaf);
+            node.postMoveState = MoveResult(node);
             // Add to tree
-            leaf.parentNode.children.Add(leaf);
+            node.AddToTree();
             // Remove from leaf's potential children
 
             // A node can't run SIMULATION if it ends the game
-            if (leaf.postMoveState != "IP") return;
+            if (node.postMoveState != "IP") return;
         }
         // A leaf already in the tree, then pick a random move to extend
         // leaf has 0 children in leaf.children
-        else if (leaf.postMoveState == "IP")
+        else if (node.postMoveState == "IP")
         {
             // Choose a random potential child
-            Node potential = leaf.GetRandPotential();
-            // Add to tree
+            Node potential = node.GetRandPotential();
+            potential.AddToTree();
         }
 
         // SIMULATE
@@ -468,7 +478,7 @@ public static class Bot
         }
         
         // If there are no possible moves, and wasnt a Win or Loss, it must be a draw
-        if (node.gameGrid.GetAllPossibleMoves().Count == 0) return "D";
+        if (node.gameGrid.GetValidMoves().Count == 0) return "D";
 
         // Otherwise, still in play
         return "IP";
