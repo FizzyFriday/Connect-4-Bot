@@ -10,9 +10,9 @@ using System.Xml.Schema;
 public class Node
 {
     // A total of the results from playouts (+= 1 from win, += 0.5 from draw)
-    private double resultPoints = 0;
+    public double resultPoints = 0;
     // Represents the total playouts
-    private int simCount = 0;
+    public int simCount = 0;
 
     // Contains the state of the game after this node's move
     // Eg, win, draw, defeat, still playing
@@ -393,12 +393,13 @@ public static class Bot
         else if (node.postMoveState == "IP")
         {
             // Choose a random potential child
-            Node potential = node.GetRandPotential();
-            potential.AddToTree();
+            node = node.GetRandPotential();
+            node.AddToTree();
         }
 
         // SIMULATE
-        // Run a rollout
+        // Get the results of the simulation
+        string result = Rollout(node);
 
         // BACKPROGATE
         // Send the rollout results up the tree
@@ -498,9 +499,13 @@ public static class Bot
             // Moves to a random potential child
             rolled = rolled.GetRandPotential();
 
+            // Gets the state of the game after node
             string result = MoveResult(rolled);
 
+            // Game ending, return result
+            if (result != "IP") return result;
         }
-        return "";
+        // If the search hit a deadend with no moves, its a draw
+        return "D";
     }
 }
