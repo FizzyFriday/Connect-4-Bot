@@ -12,4 +12,3 @@ namespace Connect4_BotApp
     
     }
 }
-}
