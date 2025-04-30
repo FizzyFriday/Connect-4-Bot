@@ -7,9 +7,9 @@ namespace Connect4_BotApp.API
     internal static class API
     {
         // Starts the bot
-        public static int BestMove(string[,] grid, string turn, int col)
+        public static int BestMove(string[,] grid, string turn)
         {
-            int bestCol = Bot.StartBot(grid, turn, col);
+            int bestCol = Bot.StartBot(grid, turn);
             return bestCol;
         }
 

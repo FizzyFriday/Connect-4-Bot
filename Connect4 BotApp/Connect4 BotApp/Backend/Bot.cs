@@ -10,14 +10,14 @@ namespace Connect4_BotApp.Backend
 
         // Contains the information from API
         // Removes the need for calling every method with this information as parameters
-        private static (string[,] grid, string turn, int col) inputCache = new();
+        private static (string[,] grid, string turn) inputCache = new();
 
 
         // PUBLIC METHODS
         // Starts the bot's search
-        public static int StartBot(string[,] grid, string turn, int col)
+        public static int StartBot(string[,] grid, string turn)
         {
-            inputCache = (grid, turn, col);
+            inputCache = (grid, turn);
             return MCTSmanager();
         }
 
@@ -26,9 +26,9 @@ namespace Connect4_BotApp.Backend
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        private static int MCTSmanager();
+        private static int MCTSmanager()
         {
-            Node root = new Node(grid, turn);
+            Node root = new Node(inputCache.grid, inputCache.turn);
 
             int MCTScycles = 0;
 
@@ -66,6 +66,20 @@ namespace Connect4_BotApp.Backend
             Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles / timer.Elapsed.TotalSeconds}per/s");
             Console.WriteLine($"Best Move - {bestCol}");
             */
+
+            int mostSims = 0;
+            int bestCol = -1;
+            for (int i = 0; i < root.children.Count; i++)
+            {
+                // Grab the node, and display info
+                Node directChild = root.children[i];
+                // If this node has more simulations then the best, this must be the best move
+                if (directChild.simCount > mostSims)
+                {
+                    mostSims = directChild.simCount;
+                    bestCol = directChild.move[0];
+                }
+            }
 
             return bestCol;
         }
@@ -118,7 +132,7 @@ namespace Connect4_BotApp.Backend
             Node rolled = node;
 
             // Runs until a node has no moves it can do
-            while (rolled.gameGrid.GetValidMoves().Count > 0)
+            while (GameBoard.ValidMoves(rolled.grid).Count > 0)
             {
                 // Moves to a random potential child
                 rolled = rolled.GetRandPotential();
@@ -164,7 +178,8 @@ namespace Connect4_BotApp.Backend
             {
                 // Create a node for the 1st potential child
                 int[] potentialMove = node.potentialChildren[0];
-                Node potentialChild = new Node(node.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
+                Node potentialChild = node.CreateChild(potentialMove);
+
                 // Calculate uct for the potential child
                 double uct = potentialChild.CalculateUCT();
                 // If the potential child is the best option, return this node
@@ -175,14 +190,15 @@ namespace Connect4_BotApp.Backend
             }
 
             return best;
-
-            
         }
 
-        // Calls MoveResult, providing the necessary data as a Node
-        public static (string endState, double value) MoveResult(int[] move, string moveTurn)
+
+        // How MoveResult is called by Bot and other classes should be simplified
+
+        // Calls MoveResult, providing the necessary data as a Node. Used by other components
+        public static (string endState, double value) MoveResult(string[,] grid, int[] move, string moveTurn)
         {
-            Node translatedNode = new Node((GameGrid)gameGrid.Clone(), moveTurn, move, null);
+            Node translatedNode = new Node(grid, moveTurn, move, null);
             var resultCache = MoveResult(translatedNode);
             return resultCache;
         }
@@ -190,8 +206,8 @@ namespace Connect4_BotApp.Backend
         // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
         public static (string endState, double value) MoveResult(Node node)
         {
-            int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
-            int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
+            int gridMaxCol = inputCache.grid.GetLength(0) - 1;
+            int gridMaxRow = inputCache.grid.GetLength(1) - 1;
 
             // The gradients to explore each direction
             int[][] positiveDirecs = new int[][]
@@ -215,7 +231,7 @@ namespace Connect4_BotApp.Backend
 
                 int connectedCount = 0;
                 // Runs until out of bounds or piece isn't owned by player
-                while (node.gameGrid.grid[newSpot[0], newSpot[1]] == node.turn)
+                while (node.grid[newSpot[0], newSpot[1]] == node.turn)
                 {
                     connectedCount++;
                     newSpot[0] += gradient[0];
@@ -247,7 +263,30 @@ namespace Connect4_BotApp.Backend
                     mostConnected = pieceCounts;
                 }
             }
+
+            // The heuristic value of how long connections are
+            // The larger the connection made, the bigger change to value.
+            // A draw/in play could range from 0.4 to 0.6 instead of only 0.5
+            // This makes better moves more valuable and gives the winrate calculating
+            // in CalculateUCT be more accurate
+            double[] heuristicValues = [0, 0.05, 0.15];
+
+            if (mostConnected >= 4)
+            {
+                // If the game has ended and the winner is clear
+                if (node.turn == inputCache.turn) return ("W", 1);
+                else return ("L", 0);
+            }
+
+            // Get the heuristic change to make
+            double heuristicChange = heuristicValues[mostConnected - 1];
+            // Return the general state of the game and the heuristic
+            if (GameBoard.ValidMoves(node.grid).Count == 0) return ("D", 0.5 + heuristicChange);
+            else return ("IP", 0.5 + heuristicChange);
+
+
         }
+    }
 }
 
 /*

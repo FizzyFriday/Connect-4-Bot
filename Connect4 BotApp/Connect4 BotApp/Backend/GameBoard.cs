@@ -1,4 +1,5 @@
 ﻿using Connect4_BotApp.API;
+using Connect4_BotApp.Backend;
 
 namespace Connect4_BotApp
 {
@@ -29,8 +30,9 @@ namespace Connect4_BotApp
             return options;
         }
 
-        // Makes a move on the real game board. Should it have game end checking?
-        public static string[,] MakeMove(string[,] grid, string turn, int col)
+        // Makes a move on the real game board
+        // Returns the new game board and if the game ended
+        public static (string[,], bool) MakeMove(string[,] grid, string turn, int col)
         {
             // Translates the provided column into a move
             int[]? move = TranslateColToMove(grid, col);
@@ -39,11 +41,15 @@ namespace Connect4_BotApp
             if (move == null)
             {
                 API.API.DisplayMessage("Move wasn't valid");
-                return grid;
+                return (grid, false);
             }
 
             // Make move and return results
             grid[move[0], move[1]] = turn;
+            string state = Bot.MoveResult(grid, move, turn).endState;
+
+
+
             return grid;
         }
 
