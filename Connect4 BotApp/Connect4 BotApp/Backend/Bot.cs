@@ -39,11 +39,11 @@ namespace Connect4_BotApp.Backend
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        static int MCTSmanager(string[,] grid, string turn, int col)
+        private static int MCTSmanager(string[,] grid, string turn, int col)
         {
             List<int[]> validMoves = GameBoard.ValidMoves(grid);
             Node root = new Node(grid, turn, validMoves);
-            root.postMoveState = "IP"; // The root represents current game, which is in play
+
 
             // Allowed time to run MCTS
             int permittedDuration = 2;
@@ -53,19 +53,15 @@ namespace Connect4_BotApp.Backend
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-            // Checks the immediate moves for Win in 1 or Loss in 1 
-            int bestCol = GetObviousBest(root);
-            if (bestCol != -1) Console.WriteLine($"Obvious best - {bestCol}");
-            if (bestCol == -1)
+            // Use HeuristicManager here to check for connect 4 for player or enemy made in 1 turn
+            // Run MCTS for the allowed time
+            while (timer.Elapsed.TotalSeconds < permittedDuration)
             {
-                // Run MCTS for the allowed time
-                while (timer.Elapsed.TotalSeconds < permittedDuration)
-                {
-                    MCTS(root);
-                    MCTScycles++;
-                }
+                MCTS(root);
+                MCTScycles++;
             }
 
+            // This code may go in GameController, or be sent to GameController.DisplayMessage as 1 string
             // Displays the results of the search, and important debugging info.
             Console.WriteLine("--Final results--");
             int mostSims = 0;
@@ -85,10 +81,139 @@ namespace Connect4_BotApp.Backend
             // The child of root with most simulations is best move
             Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles / timer.Elapsed.TotalSeconds}per/s");
             Console.WriteLine($"Best Move - {bestCol}");
+
+            return bestCol;
+        }
+
+        // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
+        private static void MCTS(Node node)
+        {
+            // SEARCH - Searches using UCT until reaching node with no children
+            while (node.children.Count > 0)
+            {
+                // Compare UCT of all children, and highest uct is picked
+                node = node.GetBestChild();
+                if (node == null) return;
+            }
+
+            // EXPAND - Unless node ends the game, add random node to tree
+            if (node.GetInTree())
+            {
+                // Choose a random potential child
+                node = node.GetRandPotential();
+            }
+
+            // Gets the result of the game after the move
+            var resultAndValue = MoveResult(node);
+            node.postMoveState = resultAndValue.endState;
+            double value = resultAndValue.value;
+            node.AddToTree();
+
+            // SIMULATE
+            // If not a game ending node, simulate
+            if (node.postMoveState == "IP")
+            {
+                value = Rollout(node);
+            }
+
+            // BACKPROGATE
+            while (node.parentNode != null)
+            {
+                // Save the result to each node
+                node.simCount++;
+                node.resultPoints += value;
+                // Move up to parent
+                node = node.parentNode;
+            }
+        }
+
+        // Randomly searches until hitting a game ending result
+        private static double Rollout(Node node)
+        {
+            Node rolled = node;
+
+            // Runs until a node has no moves it can do
+            while (rolled.gameGrid.GetValidMoves().Count > 0)
+            {
+                // Moves to a random potential child
+                rolled = rolled.GetRandPotential();
+
+                // Gets the state of the game after node
+                var resultAndHeuristic = MoveResult(rolled);
+
+                // Game ending, return result
+                if (resultAndHeuristic.endState != "IP") return resultAndHeuristic.value;
+            }
+            return 0;
         }
 
 
 
+        // GetBestChild for Node has been moved here to better align with responsibilities
+        // Although it returns a Node's child, UCT is directly a part of MCTS and so should be in Bot
+        private static Node GetBestChild(Node node)
+        {
+            // Contains a node for the children and potential children not in the tree
+            double bestUCT = 0;
+            Node best = node.children[0];
+
+            // Calculate the UCT for each child in tree
+            foreach (Node child in node.children)
+            {
+                // This line causes the issue. 
+                // Don't allow moving to a game ending node
+                if (child.postMoveState != "IP") continue;
+
+                double uct = node.CalculateUCT();
+                // If its UCT is the highest seen, the child is the new best
+                if (uct > bestUCT)
+                {
+                    bestUCT = uct;
+                    best = child;
+                }
+            }
+
+            // Since all potential children will have the simCount = 0, and so same uct
+            // Only using the first potential child is needed
+            if (this.potentialChildren.Count > 0)
+            {
+                // Create a node for the 1st potential child
+                int[] potentialMove = this.potentialChildren[0];
+                Node potentialChild = new Node(this.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
+                // Calculate uct for the potential child
+                double uct = potentialChild.CalculateUCT();
+                // If the potential child is the best option, return this node
+                if (uct > bestUCT)
+                {
+                    return potentialChild;
+                }
+            }
+
+            return best;
+
+            private double CalculateUCT()
+            {
+                // Impacts if UCT will favour high winrate, or exploration
+                double explorationParameter = Math.Sqrt(2);
+
+                // If simCount != 0, set selfSims to simCount. Else, set it to 1
+                int selfSims = (simCount == 0) ? 1 : simCount;
+
+                // Gets the value of win rate
+                double winPref = resultPoints / selfSims;
+
+                // Epsilon removes the possibility of Log(1) happening, which produces 0
+                const double epsilon = 1e-6;
+                // If parent isnt null, set pSims to the simCount of parent. Else, set it to the same value as selfSims
+                double pSims = (this.parentNode != null) ? this.parentNode.simCount : selfSims;
+                if (pSims == 0) pSims = 1;
+
+                double naturalLog = Math.Log(pSims + epsilon);
+                // Gets the value of exploration
+                double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
+                return winPref + explorePref;
+            }
+        }
     }
 }
 

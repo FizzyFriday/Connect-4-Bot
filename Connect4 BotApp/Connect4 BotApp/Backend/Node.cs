@@ -35,6 +35,7 @@ namespace Connect4_BotApp
             this.grid = grid;
             this.turn = turn;
             this.potentialChildren = validMoves;
+            this.postMoveState = "IP"; // Since this is the root, the game must be in play
         }
 
         // Regular constructor
