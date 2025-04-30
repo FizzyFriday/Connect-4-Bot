@@ -175,11 +175,11 @@ namespace Connect4_BotApp.Backend
 
             // Since all potential children will have the simCount = 0, and so same uct
             // Only using the first potential child is needed
-            if (this.potentialChildren.Count > 0)
+            if (node.potentialChildren.Count > 0)
             {
                 // Create a node for the 1st potential child
-                int[] potentialMove = this.potentialChildren[0];
-                Node potentialChild = new Node(this.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
+                int[] potentialMove = node.potentialChildren[0];
+                Node potentialChild = new Node(node.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
                 // Calculate uct for the potential child
                 double uct = potentialChild.CalculateUCT();
                 // If the potential child is the best option, return this node
@@ -191,28 +191,7 @@ namespace Connect4_BotApp.Backend
 
             return best;
 
-            private double CalculateUCT()
-            {
-                // Impacts if UCT will favour high winrate, or exploration
-                double explorationParameter = Math.Sqrt(2);
-
-                // If simCount != 0, set selfSims to simCount. Else, set it to 1
-                int selfSims = (simCount == 0) ? 1 : simCount;
-
-                // Gets the value of win rate
-                double winPref = resultPoints / selfSims;
-
-                // Epsilon removes the possibility of Log(1) happening, which produces 0
-                const double epsilon = 1e-6;
-                // If parent isnt null, set pSims to the simCount of parent. Else, set it to the same value as selfSims
-                double pSims = (this.parentNode != null) ? this.parentNode.simCount : selfSims;
-                if (pSims == 0) pSims = 1;
-
-                double naturalLog = Math.Log(pSims + epsilon);
-                // Gets the value of exploration
-                double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
-                return winPref + explorePref;
-            }
+            
         }
     }
 }

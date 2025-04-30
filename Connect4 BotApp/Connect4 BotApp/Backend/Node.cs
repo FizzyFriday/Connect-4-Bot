@@ -47,6 +47,58 @@ namespace Connect4_BotApp
             this.move = move;
             this.parentNode = parentNode;
         }
+
+
+        // PUBLIC METHODS
+
+        // Returns the UCT of node
+        public double CalculateUCT()
+        {
+            // Impacts if UCT will favour high winrate, or exploration
+            double explorationParameter = Math.Sqrt(2);
+
+            // If simCount != 0, set selfSims to simCount. Else, set it to 1
+            int selfSims = (simCount == 0) ? 1 : simCount;
+
+            // Gets the value of win rate
+            double winPref = resultPoints / selfSims;
+
+            // Epsilon removes the possibility of Log(1) happening, which produces 0
+            const double epsilon = 1e-6;
+            // If parent isnt null, set pSims to the simCount of parent. Else, set it to the same value as selfSims
+            double pSims = (this.parentNode != null) ? this.parentNode.simCount : selfSims;
+            if (pSims == 0) pSims = 1;
+
+            double naturalLog = Math.Log(pSims + epsilon);
+            // Gets the value of exploration
+            double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
+            return winPref + explorePref;
+        }
+
+        public Node CreateChild(int[] move)
+        { 
+            Node child = new Node(this.GetPostMoveGrid
+        }
+
+
+
+
+        // PRIVATE METHODS
+
+        // The game board after the node's move
+        private string[,] GetPostMoveGrid()
+        {
+            string[,] postGrid = (string[,])this.grid;
+            // Make move on grid
+            return postGrid;
+        }
+
+        // Returns the turn of children, by switching
+        private string GetSwitchedTurn()
+        {
+            if (this.turn == "X") return "O";
+            return "X";
+        }
     }
 }
 

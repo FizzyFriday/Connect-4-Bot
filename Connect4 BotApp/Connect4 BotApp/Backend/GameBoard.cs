@@ -1,8 +1,6 @@
 ﻿// Contains non UI or gameplay logic methods of old GameGrid class such as GetValidMoves
 
 using Connect4_BotApp.Backend;
-using System.ComponentModel.Design;
-using System.Xml.Linq;
 
 namespace Connect4_BotApp
 {
@@ -36,7 +34,7 @@ namespace Connect4_BotApp
         public static string[,] MakeMove(string[,] grid, string turn, int col)
         {
             // Translates the provided column into a move
-            int[] move = TranslateColToMove(grid, col);
+            int[]? move = TranslateColToMove(grid, col);
 
             // If the move doesn't exist, eg column 1110343 provided
             if (move == null)
