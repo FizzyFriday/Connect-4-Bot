@@ -56,11 +56,11 @@ public class Node
     }
 
 
-    public Node getBestChild()
+    public Node GetBestChild()
     {
         // Contains a node for the children and potential children not in the tree
         double bestUCT = 0;
-        Node best;
+        Node best = this.children[0];
 
         // Calculate the UCT for each child in tree
         foreach (Node child in this.children)
@@ -76,37 +76,20 @@ public class Node
 
         // Since all potential children will have the simCount = 0, and so same uct
         // Only using the first potential child is needed
-        
-        // Compare uct of 1st potential child
-        // If its uct is higher than the children, this potential child is the new best
-        // return potential child
-
-
-        return null;
-        foreach (int[] move in this.potentialChildren)
+        if (this.potentialChildren.Count > 0)
         {
-            GameGrid postGrid = getPostMoveGrid();
-            string postTurn = getSwitchedTurn();
-
-            // Creates a temporarily used node. Isn't added to the tree
-            Node potentialChild = new Node(postGrid, postTurn, move, this);
-            childrenAndPotential.Add(potentialChild);
-        }
-
-        double bestUCT = 0;
-        Node best = this.children[0];
-        // Run through all nodes
-        foreach (Node node in childrenAndPotential)
-        {
-            // calculate the uct, and compare to the best
-            double uct = node.calculateUCT();
+            // Create a node for the 1st potential child
+            int[] potentialMove = this.potentialChildren[0];
+            Node potentialChild = new Node(this.getPostMoveGrid(), this.getSwitchedTurn(), potentialMove, this);
+            // Calculate uct for the potential child
+            double uct = potentialChild.calculateUCT();
+            // If the potential child is the best option, return this node
             if (uct > bestUCT)
             {
-                bestUCT = uct;
-                best = node;
+                return potentialChild;
             }
         }
-        // return the node with the highest uct
+
         return best;
     }
 
@@ -337,7 +320,7 @@ public static class Bot
         while (node.children.Count > 0)
         {
             // Compare UCT of all children, and highest uct is picked
-            node = node.getBestChild();
+            node = node.GetBestChild();
         }
 
         // node = Leaf
