@@ -12,8 +12,8 @@ namespace Connect4_BotApp.Frontend
 
         private static string turn = "X";
 
-        // Any initialization occurs here
-        static void Main()
+        // The startup function
+        private static void Main()
         {
             for (int c = 0; c < grid.GetLength(0); c++)
             {
@@ -25,6 +25,19 @@ namespace Connect4_BotApp.Frontend
 
             GameLoop();
         }
+
+
+        // PUBLIC METHODS
+
+        // Displays a string to the console
+        public static void DisplayMessage(string msg)
+        {
+            Console.WriteLine(msg);
+        }
+
+
+
+        // PRIVATE METHODS
 
         // Gameplay loop here
         private static void GameLoop()
@@ -40,7 +53,7 @@ namespace Connect4_BotApp.Frontend
                 int col = Convert.ToInt16(Console.ReadLine());
                 Console.WriteLine("");
                 // Makes move onto the game board
-                MakeMove(col, turn);
+                grid = Backend.Bot.MakeMove(grid, turn, col);
                 // If the player won, don't switch turn
                 if (!gameRunning) break;
 
@@ -56,7 +69,7 @@ namespace Connect4_BotApp.Frontend
 
 
         // Displays the game on screen
-        public static void DisplayGame()
+        private static void DisplayGame()
         {
             // Moves down the rows
             for (int r = 5; r >= 0; r--)
@@ -87,22 +100,7 @@ namespace Connect4_BotApp.Frontend
             
         }
 
-        // Makes a move on the real game board
-        public static bool MakeMove(int col, string turn)
-        {
-            List<int[]> moveOptions = Backend.Bot.ValidMoves(grid);
-
-            foreach (int[] moveOption in moveOptions)
-            {
-                // If the chosen move is a possible move
-                if (col == moveOption[0])
-                {
-                    grid[col, moveOption[1]] = turn;
-                    // Check if game ended
-                }
-            }
-            return true;
-        }
+        
 
 
 

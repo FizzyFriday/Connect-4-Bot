@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Connect4_BotApp.Frontend;
+using System.Diagnostics;
 
 namespace Connect4_BotApp.Backend
 {
@@ -10,7 +11,7 @@ namespace Connect4_BotApp.Backend
         // Starts the bot - Accessed by GameController.cs
         public static int BestMove(string[,] grid, string turn)
         {
-            int bestCol = MCTSmanager();
+            int bestCol = MCTSmanager(grid, turn);
             return bestCol;
         }
 
@@ -20,13 +21,25 @@ namespace Connect4_BotApp.Backend
             return GameBoard.ValidMoves(grid);
         }
 
+        // Makes a move on grid and returns it - used by multiple classes
+        public static string[,] MakeMove(string[,] grid, string turn, int col)
+        {
+            return GameBoard.MakeMove(grid, turn, col);
+        }
+
+        // Only method allowed to use GameController - used by multiple classes
+        public static void DisplayMessage(string msg)
+        {
+            GameController.DisplayMessage(msg);
+        }
+
 
 
 
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        private static int MCTSmanager()
+        private static int MCTSmanager(string[,] grid, string turn)
         {
             // Use original logic
             return -1;
