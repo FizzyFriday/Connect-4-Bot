@@ -1,13 +1,18 @@
 ﻿using Connect4_BotApp.Frontend;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Connect4_BotApp.Backend
 {
-    // Handles MCTS logic / tree searching. Communicates with other classes.
+    // Handles MCTS logic / tree searching
     internal static class Bot
     {
-        // PUBLIC METHODS
+        private static double MCTSpermittedTime = 2;
 
+
+
+        // PUBLIC METHODS
+        // Starts the bot's search
         public static int StartBot(string[,] grid, string turn, int col)
         {
             return MCTSmanager(grid, turn, col);
@@ -20,12 +25,8 @@ namespace Connect4_BotApp.Backend
         // Manages and deals with results of MCTS
         private static int MCTSmanager(string[,] grid, string turn, int col)
         {
-            List<int[]> validMoves = GameBoard.ValidMoves(grid);
-            Node root = new Node(grid, turn, validMoves);
+            Node root = new Node(grid, turn);
 
-
-            // Allowed time to run MCTS
-            int permittedDuration = 2;
             int MCTScycles = 0;
 
             // Stopwatches time running
@@ -34,12 +35,13 @@ namespace Connect4_BotApp.Backend
 
             // Use HeuristicManager here to check for connect 4 for player or enemy made in 1 turn
             // Run MCTS for the allowed time
-            while (timer.Elapsed.TotalSeconds < permittedDuration)
+            while (timer.Elapsed.TotalSeconds < MCTSpermittedTime)
             {
                 MCTS(root);
                 MCTScycles++;
             }
 
+            /*
             // This code may go in GameController, or be sent to GameController.DisplayMessage as 1 string
             // Displays the results of the search, and important debugging info.
             Console.WriteLine("--Final results--");
@@ -60,6 +62,7 @@ namespace Connect4_BotApp.Backend
             // The child of root with most simulations is best move
             Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles / timer.Elapsed.TotalSeconds}per/s");
             Console.WriteLine($"Best Move - {bestCol}");
+            */
 
             return bestCol;
         }
@@ -71,12 +74,12 @@ namespace Connect4_BotApp.Backend
             while (node.children.Count > 0)
             {
                 // Compare UCT of all children, and highest uct is picked
-                node = node.GetBestChild();
+                node = BestUCTChild(node);
                 if (node == null) return;
             }
 
             // EXPAND - Unless node ends the game, add random node to tree
-            if (node.GetInTree())
+            if (node.isInTree())
             {
                 // Choose a random potential child
                 node = node.GetRandPotential();
@@ -130,7 +133,7 @@ namespace Connect4_BotApp.Backend
 
         // GetBestChild for Node has been moved here to better align with responsibilities
         // Although it returns a Node's child, UCT is directly a part of MCTS and so should be in Bot
-        private static Node GetBestChild(Node node)
+        private static Node BestUCTChild(Node node)
         {
             // Contains a node for the children and potential children not in the tree
             double bestUCT = 0;

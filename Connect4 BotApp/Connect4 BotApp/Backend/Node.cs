@@ -30,20 +30,20 @@ namespace Connect4_BotApp
 
 
         // Root constructor
-        public Node(string[,] grid, string turn, List<int[]> validMoves)
+        public Node(string[,] grid, string turn)
         {
             this.grid = grid;
             this.turn = turn;
-            this.potentialChildren = validMoves;
+            this.potentialChildren = GameBoard.ValidMoves(grid);
             this.postMoveState = "IP"; // Since this is the root, the game must be in play
         }
 
         // Regular constructor
-        public Node(string[,] grid, string turn, List<int[]> validMoves, int[] move, Node? parentNode)
+        public Node(string[,] grid, string turn, int[] move, Node? parentNode)
         {
             this.grid = grid;
             this.turn = turn;
-            this.potentialChildren = validMoves;
+            this.potentialChildren = GameBoard.ValidMoves(grid);
             this.move = move;
             this.parentNode = parentNode;
         }
@@ -75,9 +75,38 @@ namespace Connect4_BotApp
             return winPref + explorePref;
         }
 
+        // Chooses a random child from potential children - Used in rollout
+        public Node GetRandPotential()
+        {
+            Random rand = new Random();
+
+            // Chooses a random move from the list of potentialChildren
+            int potentialCount = this.potentialChildren.Count;
+            int potentialChildIndex = rand.Next(0, potentialCount);
+            int[] potentialMove = this.potentialChildren[potentialChildIndex];
+
+            // Create the randomly chosen node
+            return CreateChild(potentialMove);
+        }
+
+        // Creates a Child node - useful for when not in tree
         public Node CreateChild(int[] move)
-        { 
-            Node child = new Node(this.GetPostMoveGrid
+        {
+            return new Node(GetPostMoveGrid(), GetSwitchedTurn(), move, this);
+        }
+
+        // Checks if in tree - Identical to old GetInTree method
+        public bool IsInTree()
+        {
+            if (this.parentNode == null)
+            {
+                API.DisplayMessage("Error in Node.GetInTree() - Node has no parent. Perhaps a root?");
+                return false;
+            }
+
+            // Checks if the parent has this node as a child in tree
+            if (this.parentNode.children.Contains(this)) return true;
+            else return false;
         }
 
 
