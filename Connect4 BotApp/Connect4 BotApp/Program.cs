@@ -97,6 +97,7 @@ public class Node
         return best;
     }
 
+    // Chooses a random child from potential children
     public Node GetRandPotential()
     {
         // Selects a random potential children
@@ -112,6 +113,22 @@ public class Node
         return newChild;
     }
 
+    // Makes adding to the tree simpler in the Bot class
+    public void AddToTree()
+    { 
+        // Checks if the node has a parent (node isnt root)
+        if (this.parentNode != null)
+        {
+            // References parent node
+            Node parent = this.parentNode;
+            // Adds to tree
+            parent.children.Add(this);
+
+            // Since when adding to tree, this is no longer a *potential* child, 
+            // it would be removed from the list of potentialChildren
+            parent.potentialChildren.Remove(this.move);
+        }
+    }
 
 
     // Private methods
@@ -360,7 +377,12 @@ public static class Bot
         }
         // A leaf already in the tree, then pick a random move to extend
         // leaf has 0 children in leaf.children
-        
+        else if (leaf.postMoveState == "IP")
+        {
+            // Choose a random potential child
+            Node potential = leaf.GetRandPotential();
+            // Add to tree
+        }
 
         // SIMULATE
         // Run a rollout
