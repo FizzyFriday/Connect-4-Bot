@@ -1,9 +1,8 @@
-﻿// Contains non UI or gameplay logic methods of old GameGrid class such as GetValidMoves
-
-using Connect4_BotApp.Backend;
+﻿using Connect4_BotApp.API;
 
 namespace Connect4_BotApp
 {
+    // Contains non UI or gameplay logic methods of old GameGrid class such as GetValidMoves
     internal static class GameBoard
     {
         public static List<int[]> ValidMoves(string[,] grid)

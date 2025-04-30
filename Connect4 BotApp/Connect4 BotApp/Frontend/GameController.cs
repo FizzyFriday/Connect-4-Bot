@@ -1,6 +1,4 @@
-﻿using Connect4_BotApp.Backend;
-using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks.Dataflow;
+﻿using Connect4_BotApp.API;
 
 namespace Connect4_BotApp.Frontend
 {
@@ -53,7 +51,7 @@ namespace Connect4_BotApp.Frontend
                 int col = Convert.ToInt16(Console.ReadLine());
                 Console.WriteLine("");
                 // Makes move onto the game board
-                grid = Backend.Bot.MakeMove(grid, turn, col);
+                grid = API.MakeMove(grid, turn, col);
                 // If the player won, don't switch turn
                 if (!gameRunning) break;
 

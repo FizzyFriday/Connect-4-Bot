@@ -1,6 +1,5 @@
-﻿using Connect4_BotApp.Frontend;
+﻿using Connect4_BotApp.API;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace Connect4_BotApp.Backend
 {
@@ -79,7 +78,7 @@ namespace Connect4_BotApp.Backend
             }
 
             // EXPAND - Unless node ends the game, add random node to tree
-            if (node.isInTree())
+            if (node.IsInTree())
             {
                 // Choose a random potential child
                 node = node.GetRandPotential();

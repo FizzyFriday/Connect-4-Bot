@@ -1,6 +1,4 @@
-﻿using Connect4_BotApp.Backend;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using Connect4_BotApp.API;
 
 namespace Connect4_BotApp
 {

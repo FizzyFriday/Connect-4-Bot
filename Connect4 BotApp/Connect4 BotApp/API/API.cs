@@ -1,7 +1,7 @@
 ﻿using Connect4_BotApp.Frontend;
-using System.Diagnostics;
+using Connect4_BotApp.Backend;
 
-namespace Connect4_BotApp.Backend
+namespace Connect4_BotApp.API
 {
     // Handles all communication between Frontend and Backend
     internal static class API
@@ -33,3 +33,4 @@ namespace Connect4_BotApp.Backend
         }
     }
 }
+
