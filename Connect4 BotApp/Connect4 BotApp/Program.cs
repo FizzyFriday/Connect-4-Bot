@@ -56,12 +56,33 @@ public class Node
     }
 
 
-    public Node getBestUCTChild()
+    public Node getBestChild()
     {
         // Contains a node for the children and potential children not in the tree
-        List<Node> childrenAndPotential = new(this.children);
+        double bestUCT = 0;
+        Node best;
 
-        // Creates a node for all potential children
+        // Calculate the UCT for each child in tree
+        foreach (Node child in this.children)
+        {
+            double uct = child.calculateUCT();
+            // If its UCT is the highest seen, the child is the new best
+            if (uct > bestUCT)
+            {
+                bestUCT = uct;
+                best = child;
+            }
+        }
+
+        // Since all potential children will have the simCount = 0, and so same uct
+        // Only using the first potential child is needed
+        
+        // Compare uct of 1st potential child
+        // If its uct is higher than the children, this potential child is the new best
+        // return potential child
+
+
+        return null;
         foreach (int[] move in this.potentialChildren)
         {
             GameGrid postGrid = getPostMoveGrid();
@@ -316,13 +337,14 @@ public static class Bot
         while (node.children.Count > 0)
         {
             // Compare UCT of all children, and highest uct is picked
-            node = node.getBestUCTChild();
+            node = node.getBestChild();
         }
 
         // node = Leaf
 
         // EXPAND
         // Unless a node that ends the game, add a random node to tree
+        Node leaf = node;
 
         // SIMULATE
         // Run a rollout
