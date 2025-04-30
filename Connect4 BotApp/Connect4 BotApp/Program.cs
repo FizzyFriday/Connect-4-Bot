@@ -37,6 +37,7 @@ public class Node
     {
         this.gameGrid = gameGrid;
         this.turn = turn;
+        this.potentialChildren = this.gameGrid.GetValidMoves();
     }
 
     // Main constructor
@@ -60,15 +61,13 @@ public class Node
         Node best = this.children[0];
 
         // Calculate the UCT for each child in tree
-        Console.WriteLine(this.children.Count);
         foreach (Node child in this.children)
         {
-            // This line causes the issue
+            // This line causes the issue. 
             // Don't allow moving to a game ending node
             if (child.postMoveState != "IP") continue;
 
             double uct = child.CalculateUCT();
-            Console.WriteLine(uct);
             // If its UCT is the highest seen, the child is the new best
             if (uct > bestUCT)
             {
@@ -187,7 +186,6 @@ public class Node
         double naturalLog = Math.Log(pSims + epsilon);
         // Gets the value of exploration
         double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
-        Console.WriteLine(winPref + explorePref);
         return winPref + explorePref;
     }
 }
@@ -346,9 +344,10 @@ public static class Bot
     static void MCTSmanager()
     {
         // The allowed repetitions of mcts
-        int allowedMCTSReps = 100;
+        int allowedMCTSReps = 1;
         int MCTSran = 0;
         Node root = new Node(gameGrid, turn);
+        root.postMoveState = "IP"; // The root represents current game, which is in play
 
         // Runs 500 times, and adds to the counter
         while (MCTSran < allowedMCTSReps)
@@ -358,9 +357,11 @@ public static class Bot
         }
 
         // The child of root with most simulations is best move
-        foreach (Node directChild in root.children)
+        Console.WriteLine($"Total children: {root.children.Count}");
+        for (int i = 0; i < root.children.Count; i++)
         {
-            Console.WriteLine(directChild.simCount);
+            Node directChild = root.children[i];
+            Console.WriteLine($"Sim count of column {i}: {directChild.simCount}");
         }
     }
 
@@ -377,9 +378,22 @@ public static class Bot
         // On 1st iteration - node = root
 
         // EXPAND - Unless node ends the game, add random node to tree
+        // A leaf already in the tree, then pick a random move to extend
+        // leaf has 0 children in leaf.children
+
+        // This will run on the 1st iteration - where node = root, because 
+        // root.postMoveState is set to "IP" when made
+        if (node.postMoveState == "IP")
+        {
+            // Choose a random potential child
+            node = node.GetRandPotential();
+            node.postMoveState = MoveResult(node);
+            node.AddToTree();
+            // Prevent simulating if the node ends the game
+            if (node.postMoveState != "IP") return;
+        }
         // This leaf isn't in the tree, so add to tree
-        if (node.parentNode == null) return; // Shouldn't run as leaf shouldn't be the root because of SEARCH
-        if (!node.GetInTree())
+        if (!node.GetInTree() || node.parentNode == null)
         {
             // Get the state of game after the node's move
             node.postMoveState = MoveResult(node);
@@ -390,14 +404,8 @@ public static class Bot
             // A node can't run SIMULATION if it ends the game
             if (node.postMoveState != "IP") return;
         }
-        // A leaf already in the tree, then pick a random move to extend
-        // leaf has 0 children in leaf.children
-        else if (node.postMoveState == "IP")
-        {
-            // Choose a random potential child
-            node = node.GetRandPotential();
-            node.AddToTree();
-        }
+        
+        
 
         // SIMULATE
         // Get the results of the simulation
