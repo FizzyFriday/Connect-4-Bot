@@ -1,11 +1,51 @@
-﻿using System.Diagnostics;
+﻿using Connect4_BotApp.Backend;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Connect4_BotApp
 {
     // Stores function related to the node and tree
     internal class Node
-    { 
-    
+    {
+        // A total of the results from playouts (+= 1 from win, += 0.5 from draw)
+        public double resultPoints = 0;
+        // Represents the total playouts
+        public int simCount = 0;
+
+        // Contains the state of the game after this node's move
+        // Eg, win, draw, defeat, still playing
+        public string postMoveState = "";
+
+        // Contains the children
+        public List<Node> children = new List<Node>();
+
+        // Contains the potential children that aren't nodes yet
+        public List<int[]> potentialChildren = new List<int[]>();
+
+        public string turn;
+        public int[] move = new int[2];
+        public Node? parentNode;
+        // Represents what the board looks like for this node
+        public string[,] grid;
+
+
+        // Root constructor
+        public Node(string[,] grid, string turn, List<int[]> validMoves)
+        {
+            this.grid = grid;
+            this.turn = turn;
+            this.potentialChildren = validMoves;
+        }
+
+        // Regular constructor
+        public Node(string[,] grid, string turn, List<int[]> validMoves, int[] move, Node? parentNode)
+        {
+            this.grid = grid;
+            this.turn = turn;
+            this.potentialChildren = validMoves;
+            this.move = move;
+            this.parentNode = parentNode;
+        }
     }
 }
 

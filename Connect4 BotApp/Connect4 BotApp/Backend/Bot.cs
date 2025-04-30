@@ -9,9 +9,9 @@ namespace Connect4_BotApp.Backend
         // PUBLIC METHODS
 
         // Starts the bot - Accessed by GameController.cs
-        public static int BestMove(string[,] grid, string turn)
+        public static int BestMove(string[,] grid, string turn, int col)
         {
-            int bestCol = MCTSmanager(grid, turn);
+            int bestCol = MCTSmanager(grid, turn, col);
             return bestCol;
         }
 
@@ -39,9 +39,10 @@ namespace Connect4_BotApp.Backend
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        static void MCTSmanager(string[,] grid, string turn, int col)
+        static int MCTSmanager(string[,] grid, string turn, int col)
         {
-            Node root = new Node(gameGrid, turn);
+            List<int[]> validMoves = GameBoard.ValidMoves(grid);
+            Node root = new Node(grid, turn, validMoves);
             root.postMoveState = "IP"; // The root represents current game, which is in play
 
             // Allowed time to run MCTS
