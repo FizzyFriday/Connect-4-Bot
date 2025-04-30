@@ -486,4 +486,21 @@ public static class Bot
         // Otherwise, still in play
         return "IP";
     }
+
+    // Randomly searches until hitting a game ending result
+    private static string Rollout(Node node)
+    {
+        Node rolled = node;
+
+        // Runs until a node has no moves it can do
+        while (rolled.gameGrid.GetValidMoves().Count > 0)
+        {
+            // Moves to a random potential child
+            rolled = rolled.GetRandPotential();
+
+            string result = MoveResult(rolled);
+
+        }
+        return "";
+    }
 }
