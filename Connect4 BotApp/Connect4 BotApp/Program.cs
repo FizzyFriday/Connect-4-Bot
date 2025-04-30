@@ -329,6 +329,19 @@ public static class Bot
         // Unless a node that ends the game, add a random node to tree
         Node leaf = node;
 
+        // This leaf isn't in the tree, so add to tree
+        if (leaf.parentNode == null) return; // Shouldn't run as leaf shouldn't be the root because of SEARCH
+        if (leaf.parentNode.children.Contains(leaf) == false)
+        {
+            // Get the state of game after the node's move
+            leaf.postMoveState = MoveResult(leaf);
+            // Add to tree
+            leaf.parentNode.children.Add(leaf);
+
+            // A node can't run SIMULATION if it ends the game
+            if (leaf.postMoveState != "IP") return;
+        }
+
         // SIMULATE
         // Run a rollout
 
