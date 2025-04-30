@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -166,7 +167,7 @@ public class Node
         return "X";
     }
 
-    private double CalculateUCT()
+    public double CalculateUCT()
     {
         // Impacts if UCT will favour high winrate, or exploration
         double explorationParameter = Math.Sqrt(2);
@@ -343,26 +344,38 @@ public static class Bot
     // Deals with the results of MCTS
     static void MCTSmanager()
     {
-        // The allowed repetitions of mcts
-        int allowedMCTSReps = 1;
-        int MCTSran = 0;
         Node root = new Node(gameGrid, turn);
         root.postMoveState = "IP"; // The root represents current game, which is in play
 
-        // Runs 500 times, and adds to the counter
-        while (MCTSran < allowedMCTSReps)
+        // Allowed time to run MCTS
+        int permittedDuration = 2;
+        int MCTScycles = 0;
+
+        // Stopwatches time running
+        Stopwatch timer = new Stopwatch();
+        timer.Start();
+
+        int allowed = 30;
+        while (timer.Elapsed.TotalSeconds < permittedDuration && MCTScycles < allowed)
         {
             MCTS(root);
-            MCTSran++;
+
+            // After each iteration, displays important info for each direct child of root
+            Console.WriteLine($"Total children: {root.children.Count}");
+            for (int i = 0; i < root.children.Count; i++)
+            {
+                Node directChild = root.children[i];
+                Console.WriteLine($"Sim count of column {i}: {directChild.simCount}");
+                Console.WriteLine($"Win rate of column {i}: {directChild.resultPoints / directChild.simCount}");
+                Console.WriteLine($"$UCT of column {i}: { directChild.CalculateUCT()}");
+            }
+            Console.WriteLine("");
+            MCTScycles++;
         }
 
         // The child of root with most simulations is best move
-        Console.WriteLine($"Total children: {root.children.Count}");
-        for (int i = 0; i < root.children.Count; i++)
-        {
-            Node directChild = root.children[i];
-            Console.WriteLine($"Sim count of column {i}: {directChild.simCount}");
-        }
+        Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles/timer.Elapsed.TotalSeconds}per/s");
+        
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
