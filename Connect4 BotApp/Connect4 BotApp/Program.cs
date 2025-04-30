@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
 
 
 
@@ -313,13 +312,6 @@ public static class Bot
         // Creates an empty board with 7 columns, 6 rows
         gameGrid = new GameGrid(7, 6);
 
-        // For testing if the bot chooses to stop a move
-        gameGrid.MakeMove(3, "X", true);
-        gameGrid.MakeMove(2, "X", true);
-        gameGrid.MakeMove(1, "O", true);
-        gameGrid.MakeMove(4, "X", true);
-        turn = "O";
-
         while (gameRunning)
         {
             Console.Clear();
@@ -360,32 +352,9 @@ public static class Bot
         Stopwatch timer = new Stopwatch();
         timer.Start();
 
-        int bestCol = -1;
-
-        // Runs through all the possible moves, and checks if the move results in a Loss or Win
-        Func<int> ObviousBestCheck = () =>
-        {
-            // Grabs all possible moves
-            List<int[]> possible = root.gameGrid.GetValidMoves();
-            int bestCol = 0;
-
-            // Run through each move
-            foreach (int[] possibleMove in possible)
-            {
-                // Get the move result cache
-                var result = MoveResult(possibleMove, turn);
-                
-                // If there is a game ending move, the best move is to stop it
-                // BUT if there is a win, this is even better and instantly returns
-                if (result.endState == "L") bestCol = possibleMove[0];
-                if (result.endState == "W") return possibleMove[0];
-            }
-            return bestCol;
-        };
-
-
-        ObviousBestCheck();
-        // If there was no change to the best move in the lamba function
+        // Checks the immediate moves for Win in 1 or Loss in 1 
+        int bestCol = GetObviousBest(root);
+        if (bestCol != -1) Console.WriteLine($"Obvious best - {bestCol}");
         if (bestCol == -1)
         {
             // Run MCTS for the allowed time
@@ -427,14 +396,7 @@ public static class Bot
             node = node.GetBestChild();
         }
 
-        // On 1st iteration - node = root
-
         // EXPAND - Unless node ends the game, add random node to tree
-        // A leaf already in the tree, then pick a random move to extend
-        // leaf has 0 children in leaf.children
-
-        // This will run on the 1st iteration - where node = root, because 
-        // root.postMoveState is set to "IP" when made
         if (node.postMoveState == "IP")
         {
             // Choose a random potential child
@@ -444,27 +406,22 @@ public static class Bot
             // Prevent simulating if the node ends the game
             if (node.postMoveState != "IP") return;
         }
-        // This leaf isn't in the tree, so add to tree
-        if (!node.GetInTree() || node.parentNode == null)
+        if (!node.GetInTree())
         {
             // Get the state of game after the node's move
             node.postMoveState = MoveResult(node).endState;
             // Add to tree
             node.AddToTree();
-            // Remove from leaf's potential children
 
             // A node can't run SIMULATION if it ends the game
             if (node.postMoveState != "IP") return;
         }
-
-
 
         // SIMULATE
         // Get the results of the simulation
         var heuristic = Rollout(node);
 
         // BACKPROGATE - Send the results up the tree
-        // Runs up the tree
         while (node.parentNode != null)
         {
             // Save the result to each node
@@ -473,10 +430,6 @@ public static class Bot
             // Move up to parent
             node = node.parentNode;
         }
-
-        // Node is now the root
-        node.simCount++;
-        node.resultPoints += heuristic;
     }
 
 
@@ -497,10 +450,7 @@ public static class Bot
         // The gradients to explore each direction
         int[][] positiveDirecs = new int[][]
         {
-            [0, 1],
-            [1, 1],
-            [1, 0],
-            [1, -1]
+            [0, 1], [1, 1], [1, 0], [1, -1]
         };
 
         // Removes the repeated use of the long if in-bounds check
@@ -518,7 +468,6 @@ public static class Bot
             if (validPoint(newSpot) == false) return 0;
 
             int connectedCount = 0;
-
             // Runs until out of bounds or piece isn't owned by player
             while (node.gameGrid.grid[newSpot[0], newSpot[1]] == node.turn)
             {
@@ -569,7 +518,6 @@ public static class Bot
 
         // Get the heuristic change to make
         double heuristicChange = heuristicValues[mostConnected - 1];
-        heuristicChange = 0;
         // Return the general state of the game and the heuristic
         if (node.gameGrid.GetValidMoves().Count == 0) return ("D", 0.5 + heuristicChange);
         else return ("IP", 0.5 + heuristicChange);
@@ -593,5 +541,30 @@ public static class Bot
             if (resultAndHeuristic.endState != "IP") return resultAndHeuristic.value;
         }
         return 0;
+    }
+
+    private static int GetObviousBest(Node root)
+    {
+        // Grabs all possible moves
+        List<int[]> possible = root.gameGrid.GetValidMoves();
+        int bestCol = -1;
+
+        // Run through each move
+        foreach (int[] possibleMove in possible)
+        {
+            // Loss checking
+            string enemyTurn = "O";
+            if (turn == "O") enemyTurn = "X";
+            // Get the move result cache
+            var result = MoveResult(possibleMove, enemyTurn);
+
+            // The win is a win for the enemy, or defeat
+            if (result.endState == "L") bestCol = possibleMove[0];
+
+            // Win checking
+            result = MoveResult(possibleMove, turn);
+            if (result.endState == "W") return possibleMove[0];
+        }
+        return bestCol;
     }
 }
