@@ -98,13 +98,40 @@ namespace Connect4_BotApp
         {
             if (this.parentNode == null)
             {
-                API.DisplayMessage("Error in Node.GetInTree() - Node has no parent. Perhaps a root?");
+                API.API.DisplayMessage("Error in Node.GetInTree() - Node has no parent. Perhaps a root?");
                 return false;
             }
 
             // Checks if the parent has this node as a child in tree
             if (this.parentNode.children.Contains(this)) return true;
             else return false;
+        }
+
+        // Makes adding to the tree simpler in the Bot class
+        public void AddToTree()
+        {
+            // Checks if the node is in tree already, to prevent repeated adding
+            if (IsInTree())
+            {
+                API.API.DisplayMessage("Error in Node.AddToTree() - Attempted to add a node already existing in tree");
+                throw new Exception();
+            }
+
+            // Checks if node has parent
+            if (this.parentNode == null)
+            {
+                API.API.DisplayMessage("Error in Node.AddToTree() - Attempted to add a node without a parent");
+                throw new Exception();
+            }
+
+            // References parent node
+            Node parent = this.parentNode;
+            // Adds to tree
+            parent.children.Add(this);
+
+            // Since when adding to tree, this is no longer a *potential* child, 
+            // it would be removed from the list of potentialChildren
+            parent.potentialChildren.Remove(this.move);
         }
 
 

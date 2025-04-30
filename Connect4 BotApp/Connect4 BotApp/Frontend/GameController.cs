@@ -51,7 +51,7 @@ namespace Connect4_BotApp.Frontend
                 int col = Convert.ToInt16(Console.ReadLine());
                 Console.WriteLine("");
                 // Makes move onto the game board
-                grid = API.MakeMove(grid, turn, col);
+                grid = API.API.MakeMove(grid, turn, col);
                 // If the player won, don't switch turn
                 if (!gameRunning) break;
 
