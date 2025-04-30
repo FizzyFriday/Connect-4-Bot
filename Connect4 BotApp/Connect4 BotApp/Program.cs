@@ -394,39 +394,35 @@ public static class Bot
         {
             // Compare UCT of all children, and highest uct is picked
             node = node.GetBestChild();
+            if (node == null) return;
         }
 
         // EXPAND - Unless node ends the game, add random node to tree
-        if (node.postMoveState == "IP")
+        if (node.GetInTree())
         {
             // Choose a random potential child
             node = node.GetRandPotential();
-            node.postMoveState = MoveResult(node).endState;
-            node.AddToTree();
-            // Prevent simulating if the node ends the game
-            if (node.postMoveState != "IP") return;
         }
-        if (!node.GetInTree())
-        {
-            // Get the state of game after the node's move
-            node.postMoveState = MoveResult(node).endState;
-            // Add to tree
-            node.AddToTree();
 
-            // A node can't run SIMULATION if it ends the game
-            if (node.postMoveState != "IP") return;
-        }
+        // Gets the result of the game after the move
+        var resultAndValue = MoveResult(node);
+        node.postMoveState = resultAndValue.endState;
+        double value = resultAndValue.value;
+        node.AddToTree();
 
         // SIMULATE
-        // Get the results of the simulation
-        var heuristic = Rollout(node);
+        // If not a game ending node, simulate
+        if (node.postMoveState == "IP")
+        {
+            value = Rollout(node);
+        }
 
-        // BACKPROGATE - Send the results up the tree
+        // BACKPROGATE
         while (node.parentNode != null)
         {
             // Save the result to each node
             node.simCount++;
-            node.resultPoints += heuristic;
+            node.resultPoints += value;
             // Move up to parent
             node = node.parentNode;
         }
