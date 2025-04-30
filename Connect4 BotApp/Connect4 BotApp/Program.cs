@@ -69,6 +69,9 @@ public class Node
         // Calculate the UCT for each child in tree
         foreach (Node child in this.children)
         {
+            // Don't allow moving to a game ending node
+            if (child.postMoveState != "IP") continue;
+
             double uct = child.CalculateUCT();
             // If its UCT is the highest seen, the child is the new best
             if (uct > bestUCT)
@@ -116,6 +119,12 @@ public class Node
     // Makes adding to the tree simpler in the Bot class
     public void AddToTree()
     {
+        // Checks if the node is in tree already, to prevent repeated adding
+        if (this.GetInTree())
+        {
+            throw new Exception("Error in Node.AddToTree() - Attempted to add a node already existing in tree");
+        }
+
         // Checks if node has parent
         if (this.parentNode == null)
         {
@@ -358,23 +367,17 @@ public static class Bot
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
     private static void MCTS(Node node)
     {
-        // node = Root
-        Console.WriteLine("MCTS called");
-
-        // SEARCH
-        // Searches through the tree until reaching a leaf node - no children
+        // SEARCH - Searches using UCT until reaching node with no children
         while (node.children.Count > 0)
         {
             // Compare UCT of all children, and highest uct is picked
             node = node.GetBestChild();
         }
 
-        // EXPAND
-        // Unless a node that ends the game, add a random node to tree
-
+        // EXPAND - Unless node ends the game, add random node to tree
         // This leaf isn't in the tree, so add to tree
         if (node.parentNode == null) return; // Shouldn't run as leaf shouldn't be the root because of SEARCH
-        if (node.GetInTree())
+        if (!node.GetInTree())
         {
             // Get the state of game after the node's move
             node.postMoveState = MoveResult(node);
