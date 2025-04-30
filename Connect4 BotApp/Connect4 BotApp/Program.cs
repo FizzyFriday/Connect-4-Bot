@@ -394,7 +394,27 @@ public static class Bot
                 MCTS(root);
                 MCTScycles++;
             }
-        }        
+        }
+
+        // Displays the results of the search, and important debugging info.
+        Console.WriteLine("--Final results--");
+        int mostSims = 0;
+        // Search through all possible moves
+        for (int i = 0; i < root.children.Count; i++)
+        {
+            // Grab the node, and display info
+            Node directChild = root.children[i];
+            Console.WriteLine($"Sim count of column {directChild.move[0]}: {directChild.simCount}. WinPref: {directChild.resultPoints / directChild.simCount}");
+            // If this node has more simulations then the best, this must be the best move
+            if (directChild.simCount > mostSims)
+            {
+                mostSims = directChild.simCount;
+                bestCol = directChild.move[0];
+            }
+        }
+        // The child of root with most simulations is best move
+        Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles / timer.Elapsed.TotalSeconds}per/s");
+        Console.WriteLine($"Best Move - {bestCol}");
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
