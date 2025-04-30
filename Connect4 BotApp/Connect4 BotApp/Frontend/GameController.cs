@@ -108,7 +108,7 @@ namespace Connect4_BotApp.Frontend
 
 
 
-            // GameGrid code v
+            // GameGrid code v    Move into new files completed?
 
             /*
             // 2D array representing the game board and pieces
