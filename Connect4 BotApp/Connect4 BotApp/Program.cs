@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+using System.Xml.Schema;
 
 
 
@@ -52,10 +53,13 @@ public class Node
         this.turn = turn;
         this.move = move;
         this.parentNode = parent;
-        potentialChildren = this.gameGrid.GetAllPossibleMoves();
+        potentialChildren = this.gameGrid.GetValidMoves();
     }
 
 
+    // Public Methods
+
+    // Returns the child with the highest UCT, in the tree or potential
     public Node GetBestChild()
     {
         // Contains a node for the children and potential children not in the tree
@@ -65,7 +69,7 @@ public class Node
         // Calculate the UCT for each child in tree
         foreach (Node child in this.children)
         {
-            double uct = child.calculateUCT();
+            double uct = child.CalculateUCT();
             // If its UCT is the highest seen, the child is the new best
             if (uct > bestUCT)
             {
@@ -80,9 +84,9 @@ public class Node
         {
             // Create a node for the 1st potential child
             int[] potentialMove = this.potentialChildren[0];
-            Node potentialChild = new Node(this.getPostMoveGrid(), this.getSwitchedTurn(), potentialMove, this);
+            Node potentialChild = new Node(this.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
             // Calculate uct for the potential child
-            double uct = potentialChild.calculateUCT();
+            double uct = potentialChild.CalculateUCT();
             // If the potential child is the best option, return this node
             if (uct > bestUCT)
             {
@@ -93,8 +97,27 @@ public class Node
         return best;
     }
 
+    public Node GetRandPotential()
+    {
+        // Selects a random potential children
+        Random rand = new Random();
+
+        // Chooses a random move from the list of potentialChildren
+        int potentialCount = this.potentialChildren.Count;
+        int potentialChildIndex = rand.Next(0, potentialCount);
+        int[] potentialMove = this.potentialChildren[potentialChildIndex];
+
+        // Create a node for the child
+        Node newChild = new Node(this.GetPostMoveGrid(), this.GetSwitchedTurn(), potentialMove, this);
+        return newChild;
+    }
+
+
+
+    // Private methods
+
     // Gets what the grid will look like after the move
-    private GameGrid getPostMoveGrid()
+    private GameGrid GetPostMoveGrid()
     {
         GameGrid postMoveGrid = (GameGrid)this.gameGrid.Clone();
         postMoveGrid.MakeMove(this.move[0], this.turn);
@@ -102,13 +125,13 @@ public class Node
     }
 
     // Returns the turn of children, by switching
-    private string getSwitchedTurn()
+    private string GetSwitchedTurn()
     {
         if (this.turn == "X") return "O";
         return "X";
     }
 
-    private double calculateUCT()
+    private double CalculateUCT()
     {
         // Impacts if UCT will favour high winrate, or exploration
         double explorationParameter = Math.Sqrt(2);
@@ -164,8 +187,9 @@ public class GameGrid : ICloneable
         return newObj;
     }
 
+
     // Runs through the game board, determining where pieces can go
-    public List<int[]> GetAllPossibleMoves()
+    public List<int[]> GetValidMoves()
     {
         List<int[]> options = new List<int[]>();
         for (int col = 0; col < 7; col++)
@@ -244,12 +268,6 @@ public class GameGrid : ICloneable
         }
         return true;
     }
-
-    private bool CheckGameInPlay(int[] move, string turn)
-    {
-        // Instead use the results from Bot.moveResult()
-        return false;
-    }
 }
 
 
@@ -310,7 +328,7 @@ public static class Bot
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
-    static void MCTS(Node node)
+    private static void MCTS(Node node)
     {
         // node = Root
         Console.WriteLine("MCTS called");
@@ -322,8 +340,6 @@ public static class Bot
             // Compare UCT of all children, and highest uct is picked
             node = node.GetBestChild();
         }
-
-        // node = Leaf
 
         // EXPAND
         // Unless a node that ends the game, add a random node to tree
@@ -337,10 +353,14 @@ public static class Bot
             leaf.postMoveState = MoveResult(leaf);
             // Add to tree
             leaf.parentNode.children.Add(leaf);
+            // Remove from leaf's potential children
 
             // A node can't run SIMULATION if it ends the game
             if (leaf.postMoveState != "IP") return;
         }
+        // A leaf already in the tree, then pick a random move to extend
+        // leaf has 0 children in leaf.children
+        
 
         // SIMULATE
         // Run a rollout
