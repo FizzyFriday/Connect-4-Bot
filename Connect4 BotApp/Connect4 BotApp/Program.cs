@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
@@ -401,8 +402,25 @@ public static class Bot
         // Get the results of the simulation
         string result = Rollout(node);
 
-        // BACKPROGATE
-        // Send the rollout results up the tree
+        // BACKPROGATE - Send the results up the tree
+        double resultPoints = 0;
+        // Assign the rollout result to a number
+        if (result == "W") resultPoints = 1;
+        if (result == "D") resultPoints = 0.5;
+
+        // Runs up the tree
+        while (node.parentNode != null)
+        {
+            // Save the result to each node
+            node.simCount++;
+            node.resultPoints += resultPoints;
+            // Move up to parent
+            node = node.parentNode;
+        }
+
+        // Node is now the root
+        node.simCount++;
+        node.resultPoints += resultPoints;
     }
 
 
