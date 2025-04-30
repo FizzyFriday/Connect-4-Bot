@@ -39,14 +39,55 @@ namespace Connect4_BotApp.Backend
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        private static int MCTSmanager(string[,] grid, string turn)
+        static void MCTSmanager(string[,] grid, string turn, int col)
         {
-            // Use original logic
-            return -1;
+            Node root = new Node(gameGrid, turn);
+            root.postMoveState = "IP"; // The root represents current game, which is in play
+
+            // Allowed time to run MCTS
+            int permittedDuration = 2;
+            int MCTScycles = 0;
+
+            // Stopwatches time running
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+
+            // Checks the immediate moves for Win in 1 or Loss in 1 
+            int bestCol = GetObviousBest(root);
+            if (bestCol != -1) Console.WriteLine($"Obvious best - {bestCol}");
+            if (bestCol == -1)
+            {
+                // Run MCTS for the allowed time
+                while (timer.Elapsed.TotalSeconds < permittedDuration)
+                {
+                    MCTS(root);
+                    MCTScycles++;
+                }
+            }
+
+            // Displays the results of the search, and important debugging info.
+            Console.WriteLine("--Final results--");
+            int mostSims = 0;
+            // Search through all possible moves
+            for (int i = 0; i < root.children.Count; i++)
+            {
+                // Grab the node, and display info
+                Node directChild = root.children[i];
+                Console.WriteLine($"Sim count of column {directChild.move[0]}: {directChild.simCount}. WinPref: {directChild.resultPoints / directChild.simCount}");
+                // If this node has more simulations then the best, this must be the best move
+                if (directChild.simCount > mostSims)
+                {
+                    mostSims = directChild.simCount;
+                    bestCol = directChild.move[0];
+                }
+            }
+            // The child of root with most simulations is best move
+            Console.WriteLine($"{MCTScycles} runs occured, or {MCTScycles / timer.Elapsed.TotalSeconds}per/s");
+            Console.WriteLine($"Best Move - {bestCol}");
         }
 
 
-        
+
     }
 }
 

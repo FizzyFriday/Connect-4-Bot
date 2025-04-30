@@ -1,6 +1,8 @@
 ﻿// Contains non UI or gameplay logic methods of old GameGrid class such as GetValidMoves
 
 using Connect4_BotApp.Backend;
+using System.ComponentModel.Design;
+using System.Xml.Linq;
 
 namespace Connect4_BotApp
 {
@@ -33,25 +35,38 @@ namespace Connect4_BotApp
         // Makes a move on the real game board. Should it have game end checking?
         public static string[,] MakeMove(string[,] grid, string turn, int col)
         {
-            List<int[]> moveOptions = Backend.Bot.ValidMoves(grid);
+            // Translates the provided column into a move
+            int[] move = TranslateColToMove(grid, col);
 
-            bool moveSuccess = false;
+            // If the move doesn't exist, eg column 1110343 provided
+            if (move == null)
+            {
+                Bot.DisplayMessage("Move wasn't valid");
+                return grid;
+            }
+
+            // Make move and return results
+            grid[move[0], move[1]] = turn;
+            return grid;
+        }
+
+        public static int[]? TranslateColToMove(string[,] grid, int col)
+        {
+            List<int[]> moveOptions = ValidMoves(grid);
+
+            // Run through all valid moves
             foreach (int[] moveOption in moveOptions)
             {
                 // If the chosen move is a possible move
                 if (col == moveOption[0])
                 {
-                    grid[col, moveOption[1]] = turn;
-                    moveSuccess = true;
-                    // Check if game ended
+                    // Return the column and row
+                    return new int[] { col, moveOption[1] };
                 }
             }
-            // If the move wasn't an option, display this wasn't valid
-            if (!moveSuccess)
-            {
-                Bot.DisplayMessage("Move wasn't valid");
-            }
-            return grid;
+
+            Bot.DisplayMessage("Column provided invalid");
+            return null;
         }
     }
 }
