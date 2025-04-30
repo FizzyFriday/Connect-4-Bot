@@ -37,14 +37,6 @@ public class Node
     {
         this.gameGrid = gameGrid;
         this.turn = turn;
-
-        // Adds children of root to the tree
-        List<int[]> possibleMoves = this.gameGrid.GetValidMoves();
-        foreach (int[] move in possibleMoves)
-        {
-            Node child = new Node(this.gameGrid, turn, move, this);
-            this.children.Add(child);
-        }
     }
 
     // Main constructor
@@ -68,12 +60,15 @@ public class Node
         Node best = this.children[0];
 
         // Calculate the UCT for each child in tree
+        Console.WriteLine(this.children.Count);
         foreach (Node child in this.children)
         {
+            // This line causes the issue
             // Don't allow moving to a game ending node
             if (child.postMoveState != "IP") continue;
 
             double uct = child.CalculateUCT();
+            Console.WriteLine(uct);
             // If its UCT is the highest seen, the child is the new best
             if (uct > bestUCT)
             {
@@ -192,7 +187,7 @@ public class Node
         double naturalLog = Math.Log(pSims + epsilon);
         // Gets the value of exploration
         double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
-
+        Console.WriteLine(winPref + explorePref);
         return winPref + explorePref;
     }
 }
@@ -351,7 +346,7 @@ public static class Bot
     static void MCTSmanager()
     {
         // The allowed repetitions of mcts
-        int allowedMCTSReps = 10;
+        int allowedMCTSReps = 100;
         int MCTSran = 0;
         Node root = new Node(gameGrid, turn);
 
@@ -362,7 +357,11 @@ public static class Bot
             MCTSran++;
         }
 
-        // Use the results
+        // The child of root with most simulations is best move
+        foreach (Node directChild in root.children)
+        {
+            Console.WriteLine(directChild.simCount);
+        }
     }
 
     // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
@@ -374,6 +373,8 @@ public static class Bot
             // Compare UCT of all children, and highest uct is picked
             node = node.GetBestChild();
         }
+
+        // On 1st iteration - node = root
 
         // EXPAND - Unless node ends the game, add random node to tree
         // This leaf isn't in the tree, so add to tree
