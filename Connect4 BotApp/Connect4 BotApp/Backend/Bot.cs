@@ -8,13 +8,17 @@ namespace Connect4_BotApp.Backend
     {
         private static double MCTSpermittedTime = 2;
 
+        // Contains the information from API
+        // Removes the need for calling every method with this information as parameters
+        private static (string[,] grid, string turn, int col) inputCache = new();
 
 
         // PUBLIC METHODS
         // Starts the bot's search
         public static int StartBot(string[,] grid, string turn, int col)
         {
-            return MCTSmanager(grid, turn, col);
+            inputCache = (grid, turn, col);
+            return MCTSmanager();
         }
 
 
@@ -22,7 +26,7 @@ namespace Connect4_BotApp.Backend
         // PRIVATE METHODS
 
         // Manages and deals with results of MCTS
-        private static int MCTSmanager(string[,] grid, string turn, int col)
+        private static int MCTSmanager();
         {
             Node root = new Node(grid, turn);
 
@@ -174,7 +178,76 @@ namespace Connect4_BotApp.Backend
 
             
         }
-    }
+
+        // Calls MoveResult, providing the necessary data as a Node
+        public static (string endState, double value) MoveResult(int[] move, string moveTurn)
+        {
+            Node translatedNode = new Node((GameGrid)gameGrid.Clone(), moveTurn, move, null);
+            var resultCache = MoveResult(translatedNode);
+            return resultCache;
+        }
+
+        // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
+        public static (string endState, double value) MoveResult(Node node)
+        {
+            int gridMaxCol = gameGrid.grid.GetLength(0) - 1;
+            int gridMaxRow = gameGrid.grid.GetLength(1) - 1;
+
+            // The gradients to explore each direction
+            int[][] positiveDirecs = new int[][]
+            {
+            [0, 1], [1, 1], [1, 0], [1, -1]
+            };
+
+            // Removes the repeated use of the long if in-bounds check
+            Func<int[], bool> validPoint = (spot) =>
+            {
+                if (spot[0] > gridMaxCol || spot[0] < 0) return false;
+                if (spot[1] > gridMaxRow || spot[1] < 0) return false;
+                return true;
+            };
+
+            // Does the looped counting
+            Func<int[], int[], int> countLoop = (newSpot, gradient) =>
+            {
+                // If this direction isnt valid, return 0
+                if (validPoint(newSpot) == false) return 0;
+
+                int connectedCount = 0;
+                // Runs until out of bounds or piece isn't owned by player
+                while (node.gameGrid.grid[newSpot[0], newSpot[1]] == node.turn)
+                {
+                    connectedCount++;
+                    newSpot[0] += gradient[0];
+                    newSpot[1] += gradient[1];
+                    if (validPoint(newSpot) == false) break;
+                }
+                return connectedCount;
+            };
+
+            int mostConnected = 1;
+            // Run through all directions
+            foreach (var direc in positiveDirecs)
+            {
+                // Represents direc in the opposite direction
+                int[] negativeDirec = [direc[0] * -1, direc[1] * -1];
+                int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
+
+                // Gets where the 1st next spot is when moving towards the gradient and opposite of it
+                int[] posNext = [node.move[0] + direc[0], node.move[1] + direc[1]];
+                int[] negNext = [node.move[0] + negativeDirec[0], node.move[1] + negativeDirec[1]];
+
+                // Adds the count of connected pieces
+                pieceCounts += countLoop(posNext, direc);
+                pieceCounts += countLoop(negNext, negativeDirec);
+
+                // Saves the highest number of connections made
+                if (pieceCounts > mostConnected)
+                {
+                    mostConnected = pieceCounts;
+                }
+            }
+        }
 }
 
 /*

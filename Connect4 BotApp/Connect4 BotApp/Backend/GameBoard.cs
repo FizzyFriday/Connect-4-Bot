@@ -38,7 +38,7 @@ namespace Connect4_BotApp
             // If the move doesn't exist, eg column 1110343 provided
             if (move == null)
             {
-                Bot.DisplayMessage("Move wasn't valid");
+                API.API.DisplayMessage("Move wasn't valid");
                 return grid;
             }
 
@@ -62,7 +62,7 @@ namespace Connect4_BotApp
                 }
             }
 
-            Bot.DisplayMessage("Column provided invalid");
+            API.API.DisplayMessage("Column provided invalid");
             return null;
         }
     }

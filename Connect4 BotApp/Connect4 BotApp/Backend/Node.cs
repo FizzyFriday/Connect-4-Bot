@@ -157,7 +157,7 @@ namespace Connect4_BotApp
 }
 
 /*
-// Represents the nodes of the tree
+// Represents the nodes of the tree     code move complete?
 public class Node
 {
     // A total of the results from playouts (+= 1 from win, += 0.5 from draw)
