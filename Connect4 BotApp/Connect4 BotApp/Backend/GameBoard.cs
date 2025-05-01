@@ -47,10 +47,8 @@ namespace Connect4_BotApp
             // Make move and return results
             grid[move[0], move[1]] = turn;
             string state = Bot.MoveResult(grid, move, turn).endState;
-
-
-
-            return grid;
+            if (state == "IP") return (grid, true);
+            else return (grid, false);
         }
 
         public static int[]? TranslateColToMove(string[,] grid, int col)
@@ -70,6 +68,16 @@ namespace Connect4_BotApp
 
             API.API.DisplayMessage("Column provided invalid");
             return null;
+        }
+
+        public static bool ValidateCol(string[,] grid, int col)
+        {
+            List<int[]> ValidMoves = GameBoard.ValidMoves(grid);
+            foreach (int[] possibleMove in ValidMoves)
+            {
+                if (col == possibleMove[0]) return true;
+            }
+            return false;
         }
     }
 }

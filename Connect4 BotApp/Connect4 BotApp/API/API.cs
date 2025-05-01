@@ -6,21 +6,21 @@ namespace Connect4_BotApp.API
     // Handles all communication between Frontend and Backend
     internal static class API
     {
-        // Starts the bot
+        // Starts the bot, and returns the best move
         public static int BestMove(string[,] grid, string turn)
         {
             int bestCol = Bot.StartBot(grid, turn);
             return bestCol;
         }
 
-        // Returns a list of allowed moves
-        public static List<int[]> ValidMoves(string[,] grid)
+        // Returns if a column is an allowed move
+        public static bool ValidateMove(string[,] grid, int col)
         {
-            return GameBoard.ValidMoves(grid);
+            return GameBoard.ValidateCol(grid, col);
         }
 
-        // Makes a move on grid and returns it
-        public static string[,] MakeMove(string[,] grid, string turn, int col)
+        // Returns grid after making move, and if game ended
+        public static (string[,] grid, bool gameEnded) MakeMove(string[,] grid, string turn, int col)
         {
             return GameBoard.MakeMove(grid, turn, col);
         }

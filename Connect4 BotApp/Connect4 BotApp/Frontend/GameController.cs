@@ -52,8 +52,19 @@ namespace Connect4_BotApp.Frontend
                 // Gets user input on their move
                 int col = Convert.ToInt16(Console.ReadLine());
                 Console.WriteLine("");
-                // Makes move onto the game board
-                grid = API.API.MakeMove(grid, turn, col);
+
+                // Checks move can be make and then makes move
+                if (API.API.ValidateMove(grid, col))
+                {
+                    // Gets the new grid and state of game after move
+                    var results = API.API.MakeMove(grid, turn, col);
+                    // Makes grid changes
+                    grid = results.grid;
+                    // If game ended, stop game loop
+                    if (results.gameEnded) gameRunning = false;
+                }
+                else Console.WriteLine("Invalid move, switching turn");
+
                 // If the player won, don't switch turn
                 if (!gameRunning) break;
 
