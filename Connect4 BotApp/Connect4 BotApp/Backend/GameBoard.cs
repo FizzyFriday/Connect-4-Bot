@@ -36,7 +36,7 @@ namespace Connect4_BotApp
             List<int[]> possibleMoves = ValidMoves(grid);
             if (possibleMoves.Contains(move) == false)
             {
-                API.API.DisplayMessage("API.MakeMove called with invalid move. Use API.ColumnToMove for valid move. Move rejected.");
+                API.API.DisplayMessage("API.MakeMove called with invalid move. Use API.ValidateMove to check. Move rejected.");
                 return (grid, false);
             }
 

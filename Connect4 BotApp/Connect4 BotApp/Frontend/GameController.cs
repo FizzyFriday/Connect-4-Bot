@@ -49,23 +49,17 @@ namespace Connect4_BotApp.Frontend
                 int bestCol = API.API.BestMove(grid, turn);
                 Console.WriteLine($"Best move is {bestCol}");
 
-                // Gets user input on their move
-                int col = Convert.ToInt16(Console.ReadLine());
-                Console.WriteLine("");
+                int col = TurnInput();
 
-                // Checks move can be make and then makes move
-                if (API.API.ValidateMove(grid, col))
+                var results = API.API.MakeMove(grid, turn, col);
+                grid = results.grid;
+
+                // If game ended, stop game loop
+                if (results.gameEnded)
                 {
-                    // Gets the new grid and state of game after move
-                    var results = API.API.MakeMove(grid, turn, col);
-                    grid = results.grid;
-                    // If game ended, stop game loop
-                    if (results.gameEnded) gameRunning = false;
+                    gameRunning = false;
+                    break;
                 }
-                else Console.WriteLine("Invalid move, switching turn");
-
-                // If the player won, don't switch turn
-                if (!gameRunning) break;
 
                 // Switch turn
                 if (turn == "X") turn = "O";
@@ -83,6 +77,32 @@ namespace Connect4_BotApp.Frontend
             Console.Clear();
             DisplayGame();
             Console.WriteLine($"Player {turn}, enter column (0-6)");
+        }
+
+        // Handles user input, making sure inputted move is valid
+        private static int TurnInput()
+        {
+            bool validMove = false;
+            int col = -1;
+
+            // While the user provides an invalid move
+            while (!validMove)
+            {
+                try 
+                {
+                    // If column isn't an integer, invalid
+                    col = Convert.ToInt16(Console.ReadLine());
+                    Console.WriteLine("");
+
+                    // Use API to make sure move is valid, otherwise run the catch
+                    if (!API.API.ValidateMove(grid, col)) throw new Exception();
+                }
+                catch
+                {
+                    Console.WriteLine("Invalid move - try again");
+                }
+            }
+            return col;
         }
 
         // Displays the game on screen
