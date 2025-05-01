@@ -25,9 +25,9 @@ namespace Connect4_BotApp
         // moveByWho - if the move would be a win if current player
         // played the move, or if set to enemy player's a loss for the current player if
         // enemy played the move
-        public static string EndState(string[,] grid, string moveByWho, string currentTurn)
+        public static string EndState(string[,] grid, int[] move, string moveByWho, string currentTurn)
         {
-            int largestConnection = ConnectHeuristic(grid, moveByWho);
+            int largestConnection = ConnectHeuristic(grid, move, moveByWho);
 
             if (largestConnection >= 4)
             {
@@ -36,17 +36,17 @@ namespace Connect4_BotApp
                 // Connect 4 move played by other player
                 else return "L";
             }
-            else if (GameBoard.ValidMoves(node.grid).Count == 0) return "D";
+            else if (GameBoard.ValidMoves(grid).Count == 0) return "D";
             // Still in play
             else return "IP";
         }
 
         // Returns best move if Win in 1 or Loss in 1
         // Use sparingly, preferably only on Root
-        public static int GetObviousBest(Node node, string currentTurn)
+        public static int GetObviousBest(string[,] grid, int[] move, string currentTurn)
         {
             // Grabs all possible moves
-            List<int[]> possible = GameBoard.ValidMoves(node.grid);
+            List<int[]> possible = GameBoard.ValidMoves(grid);
             int bestCol = -1;
 
             // Run through each move
@@ -57,14 +57,13 @@ namespace Connect4_BotApp
                 if (currentTurn == "O") enemyTurn = "X";
                 // Get the move result cache
 
-                Node possibleChild = node.CreateChild(possibleMove); // CreateChild needs to change to input turn
-                string endState = EndState(possibleChild, enemyTurn);
+                string endState = EndState(grid, move, enemyTurn, currentTurn);
 
                 // The win is a win for the enemy, or defeat
-                if (endState == "L") bestCol = possibleMove[0];
+                if (endState == "W") bestCol = possibleMove[0];
 
                 // Win checking for current player
-                endState = EndState(possibleChild, currentTurn);
+                endState = EndState(grid, move, currentTurn, currentTurn);
                 if (endState == "W") return possibleMove[0];
             }
             return bestCol;
@@ -77,10 +76,10 @@ namespace Connect4_BotApp
         // Returns endState from move and the connection made
         // playedByWho - The turn of player making move,
         // currentTurn - Turn of the current player, which doesnt change at any point
-        private static int ConnectHeuristic(string[,] grid, string playedByWho)
+        private static int ConnectHeuristic(string[,] grid, int[] move, string playedByWho)
         {
-            int gridMaxCol = node.grid.GetLength(0) - 1;
-            int gridMaxRow = node.grid.GetLength(1) - 1;
+            int gridMaxCol = grid.GetLength(0) - 1;
+            int gridMaxRow = grid.GetLength(1) - 1;
 
             // The gradients to explore each direction
             int[][] positiveDirecs = new int[][]
@@ -104,7 +103,7 @@ namespace Connect4_BotApp
 
                 int connectedCount = 0;
                 // Runs until out of bounds or piece isn't owned by player
-                while (node.grid[newSpot[0], newSpot[1]] == node.turn)
+                while (grid[newSpot[0], newSpot[1]] == playedByWho)
                 {
                     connectedCount++;
                     newSpot[0] += gradient[0];
@@ -123,8 +122,8 @@ namespace Connect4_BotApp
                 int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
 
                 // Gets where the 1st next spot is when moving towards the gradient and opposite of it
-                int[] posNext = [node.move[0] + direc[0], node.move[1] + direc[1]];
-                int[] negNext = [node.move[0] + negativeDirec[0], node.move[1] + negativeDirec[1]];
+                int[] posNext = [move[0] + direc[0], move[1] + direc[1]];
+                int[] negNext = [move[0] + negativeDirec[0], move[1] + negativeDirec[1]];
 
                 // Adds the count of connected pieces
                 pieceCounts += countLoop(posNext, direc);
