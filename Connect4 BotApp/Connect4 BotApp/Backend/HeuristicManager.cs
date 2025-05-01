@@ -1,5 +1,6 @@
 ﻿using Connect4_BotApp.API;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 
 
 namespace Connect4_BotApp
@@ -13,11 +14,22 @@ namespace Connect4_BotApp
 
     internal class HeuristicManager
     {
+        // Represents turn of currentPlayer
+        private static string currentTurn = "";
+
+
         // PUBLIC METHODS
 
         // Runs all the heuristic calls and returns results
-        public static double GetHeuristics(Node node)
+        public static double GetHeuristics(Node node, string currentPlayerTurn)
         {
+            currentTurn = currentPlayerTurn;
+
+            // Quick response - remove since this should only be used for root?
+            int bestCol = QuickBestResponse(node.grid, node.move);
+            if (bestCol != -1) return bestCol;
+
+            // Main heuristics
             return -1;
         }
 
@@ -25,7 +37,7 @@ namespace Connect4_BotApp
         // moveByWho - if the move would be a win if current player
         // played the move, or if set to enemy player's a loss for the current player if
         // enemy played the move
-        public static string EndState(string[,] grid, int[] move, string moveByWho, string currentTurn)
+        public static string EndState(string[,] grid, int[] move, string moveByWho)
         {
             int largestConnection = ConnectHeuristic(grid, move, moveByWho);
 
@@ -43,30 +55,34 @@ namespace Connect4_BotApp
 
         // Returns best move if Win in 1 or Loss in 1
         // Use sparingly, preferably only on Root
-        public static int GetObviousBest(string[,] grid, int[] move, string currentTurn)
+        public static int QuickBestResponse(string[,] grid, int[] move)
         {
             // Grabs all possible moves
             List<int[]> possible = GameBoard.ValidMoves(grid);
-            int bestCol = -1;
 
-            // Run through each move
+            // Check for any Win in 1
             foreach (int[] possibleMove in possible)
             {
-                // Loss checking
-                string enemyTurn = "O";
-                if (currentTurn == "O") enemyTurn = "X";
-                // Get the move result cache
-
-                string endState = EndState(grid, move, enemyTurn, currentTurn);
-
-                // The win is a win for the enemy, or defeat
-                if (endState == "W") bestCol = possibleMove[0];
-
-                // Win checking for current player
-                endState = EndState(grid, move, currentTurn, currentTurn);
+                // Gets state of game after move, return the move if results in win
+                string endState = EndState(grid, move, currentTurn);
                 if (endState == "W") return possibleMove[0];
             }
-            return bestCol;
+
+            // Check for any Loss in 1 threats
+            foreach (int[] possibleMove in possible)
+            {
+                // Gets the turn of enemy
+                string enemyTurn = "O";
+                if (currentTurn == "O") enemyTurn = "X";
+
+                // Gets state of game after move, return the move if
+                // results in win for enemy player, or loss
+                string endState = EndState(grid, move, enemyTurn);
+                if (endState == "W") return possibleMove[0];
+            }
+
+            // No obvious best move
+            return -1;
         }
 
 
@@ -135,6 +151,8 @@ namespace Connect4_BotApp
                     mostConnected = pieceCounts;
                 }
             }
+
+            //double[] heuristicValues = [0, 0.05, 0.15, 1];
 
             return mostConnected;
 
