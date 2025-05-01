@@ -31,15 +31,12 @@ namespace Connect4_BotApp
 
         // Makes a move on the real game board
         // Returns the new game board and if the game ended
-        public static (string[,] grid, bool gameEnded) MakeMove(string[,] grid, string turn, int col)
+        public static (string[,] grid, bool gameEnded) MakeMove(string[,] grid, string turn, int[] move)
         {
-            // Translates the provided column into a move
-            int[]? move = TranslateColToMove(grid, col);
-
-            // If the move doesn't exist, eg column 1110343 provided
-            if (move == null)
+            List<int[]> possibleMoves = ValidMoves(grid);
+            if (possibleMoves.Contains(move) == false)
             {
-                API.API.DisplayMessage("Move wasn't valid");
+                API.API.DisplayMessage("API.MakeMove called with invalid move. Use API.ColumnToMove for valid move. Move rejected.");
                 return (grid, false);
             }
 

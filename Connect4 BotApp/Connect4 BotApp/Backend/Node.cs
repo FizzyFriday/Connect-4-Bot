@@ -85,7 +85,7 @@ namespace Connect4_BotApp
             return CreateChild(potentialMove);
         }
 
-        // Creates a Child node - useful for when not in tree
+        // Creates a Child node - useful for when not in tree but a node needed
         public Node CreateChild(int[] move)
         {
             return new Node(GetPostMoveGrid(), GetSwitchedTurn(), move, this);
@@ -140,7 +140,7 @@ namespace Connect4_BotApp
         private string[,] GetPostMoveGrid()
         {
             string[,] postGrid = (string[,])this.grid;
-            // Make move on grid
+            postGrid = GameBoard.MakeMove(this.grid, this.turn, this.move).grid;
             return postGrid;
         }
 

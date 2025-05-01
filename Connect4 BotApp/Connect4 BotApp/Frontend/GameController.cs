@@ -58,7 +58,6 @@ namespace Connect4_BotApp.Frontend
                 {
                     // Gets the new grid and state of game after move
                     var results = API.API.MakeMove(grid, turn, col);
-                    // Makes grid changes
                     grid = results.grid;
                     // If game ended, stop game loop
                     if (results.gameEnded) gameRunning = false;
@@ -84,7 +83,6 @@ namespace Connect4_BotApp.Frontend
             Console.Clear();
             DisplayGame();
             Console.WriteLine($"Player {turn}, enter column (0-6)");
-
         }
 
         // Displays the game on screen

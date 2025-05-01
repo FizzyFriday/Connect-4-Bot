@@ -22,19 +22,15 @@ namespace Connect4_BotApp.API
         // Returns grid after making move, and if game ended
         public static (string[,] grid, bool gameEnded) MakeMove(string[,] grid, string turn, int col)
         {
-            return GameBoard.MakeMove(grid, turn, col);
-        }
-
-        public static int[] ColumnToMove(string[,] grid, int col)
-        {
             int[]? move = GameBoard.TranslateColToMove(grid, col);
             // If the column couldn't be translated to a  move
             if (move == null)
             {
                 DisplayMessage("Error - Column not valid");
-                return null;
+                return (grid, false);
             }
-            return move;
+
+            return GameBoard.MakeMove(grid, turn, move);
         }
 
 
