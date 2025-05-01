@@ -1,4 +1,5 @@
 ﻿using Connect4_BotApp.API;
+using Connect4_BotApp.Backend;
 
 namespace Connect4_BotApp
 {
@@ -96,9 +97,11 @@ namespace Connect4_BotApp
         // Checks if in tree - Identical to old GetInTree method
         public bool IsInTree()
         {
-            if (this.parentNode == null)
+            // If node is the root, its in the tree
+            if (this == Bot.root) return true;
+            else if (this.parentNode == null)
             {
-                API.API.DisplayMessage("Error in Node.GetInTree() - Node has no parent. Perhaps a root?");
+                API.API.DisplayMessage("Error in Node.GetInTree() - Node has no parent and isn't Root");
                 return false;
             }
 

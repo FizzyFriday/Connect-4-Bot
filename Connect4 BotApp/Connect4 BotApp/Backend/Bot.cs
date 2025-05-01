@@ -12,13 +12,17 @@ namespace Connect4_BotApp.Backend
         // Removes the need for calling every method with this information as parameters
         private static (string[,] grid, string turn) inputCache = new();
 
+        // Contains root of tree. The reference helps with Node.IsInTree method
+        public static Node? root;
+
 
         // PUBLIC METHODS
         // Starts the bot's search
         public static int StartBot(string[,] grid, string turn)
         {
             inputCache = (grid, turn);
-            return MCTSmanager();
+            int bestCol = MCTSmanager();
+            return bestCol;
         }
 
 
@@ -28,7 +32,8 @@ namespace Connect4_BotApp.Backend
         // Manages and deals with results of MCTS
         private static int MCTSmanager()
         {
-            Node root = new Node(inputCache.grid, inputCache.turn);
+            Console.WriteLine("Begin");
+            root = new Node(inputCache.grid, inputCache.turn);
 
             int MCTScycles = 0;
 
@@ -41,6 +46,7 @@ namespace Connect4_BotApp.Backend
             while (timer.Elapsed.TotalSeconds < MCTSpermittedTime)
             {
                 MCTS(root);
+                Console.WriteLine(root.simCount);
                 MCTScycles++;
             }
 
@@ -80,6 +86,7 @@ namespace Connect4_BotApp.Backend
                     bestCol = directChild.move[0];
                 }
             }
+            Console.WriteLine("Result");
 
             return bestCol;
         }
@@ -87,20 +94,24 @@ namespace Connect4_BotApp.Backend
         // Handles the MCTS logic - Search, Expand, Simulate, Backprogate
         private static void MCTS(Node node)
         {
+            Console.WriteLine("Start");
             // SEARCH - Searches using UCT until reaching node with no children
             while (node.children.Count > 0)
             {
                 // Compare UCT of all children, and highest uct is picked
                 node = BestUCTChild(node);
                 if (node == null) return;
+                Console.WriteLine("Got");
             }
 
             // EXPAND - Unless node ends the game, add random node to tree
             if (node.IsInTree())
             {
+                Console.WriteLine("Expand");
                 // Choose a random potential child
                 node = node.GetRandPotential();
             }
+            if (node != root) Console.WriteLine("Success");
 
             // Gets the result of the game after the move
             var resultAndValue = MoveResult(node);
@@ -130,6 +141,7 @@ namespace Connect4_BotApp.Backend
         private static double Rollout(Node node)
         {
             Node rolled = node;
+            Console.WriteLine("Rollout");
 
             // Runs until a node has no moves it can do
             while (GameBoard.ValidMoves(rolled.grid).Count > 0)
@@ -143,6 +155,7 @@ namespace Connect4_BotApp.Backend
                 // Game ending, return result
                 if (resultAndHeuristic.endState != "IP") return resultAndHeuristic.value;
             }
+            Console.WriteLine("Ran");
             return 0;
         }
 
@@ -197,93 +210,11 @@ namespace Connect4_BotApp.Backend
         // Move it into HeuristicManager?
 
         // Calls MoveResult, providing the necessary data as a Node. Used by other components
-        public static (string endState, double value) MoveResult(string[,] grid, int[] move, string moveTurn)
-        {
-            Node translatedNode = new Node(grid, moveTurn, move, null);
-            var resultCache = MoveResult(translatedNode);
-            return resultCache;
-        }
-
-        // Gets the state of the game after a node, if it was a Win, Draw, Loss or still in play
-        public static (string endState, double value) MoveResult(Node node)
-        {
-            int gridMaxCol = inputCache.grid.GetLength(0) - 1;
-            int gridMaxRow = inputCache.grid.GetLength(1) - 1;
-
-            // The gradients to explore each direction
-            int[][] positiveDirecs = new int[][]
-            {
-            [0, 1], [1, 1], [1, 0], [1, -1]
-            };
-
-            // Removes the repeated use of the long if in-bounds check
-            Func<int[], bool> validPoint = (spot) =>
-            {
-                if (spot[0] > gridMaxCol || spot[0] < 0) return false;
-                if (spot[1] > gridMaxRow || spot[1] < 0) return false;
-                return true;
-            };
-
-            // Does the looped counting
-            Func<int[], int[], int> countLoop = (newSpot, gradient) =>
-            {
-                // If this direction isnt valid, return 0
-                if (validPoint(newSpot) == false) return 0;
-
-                int connectedCount = 0;
-                // Runs until out of bounds or piece isn't owned by player
-                while (node.grid[newSpot[0], newSpot[1]] == node.turn)
-                {
-                    connectedCount++;
-                    newSpot[0] += gradient[0];
-                    newSpot[1] += gradient[1];
-                    if (validPoint(newSpot) == false) break;
-                }
-                return connectedCount;
-            };
-
-            int mostConnected = 1;
-            // Run through all directions
-            foreach (var direc in positiveDirecs)
-            {
-                // Represents direc in the opposite direction
-                int[] negativeDirec = [direc[0] * -1, direc[1] * -1];
-                int pieceCounts = 1; // Set to 1 as the placed piece counts to a connect 4
-
-                // Gets where the 1st next spot is when moving towards the gradient and opposite of it
-                int[] posNext = [node.move[0] + direc[0], node.move[1] + direc[1]];
-                int[] negNext = [node.move[0] + negativeDirec[0], node.move[1] + negativeDirec[1]];
-
-                // Adds the count of connected pieces
-                pieceCounts += countLoop(posNext, direc);
-                pieceCounts += countLoop(negNext, negativeDirec);
-
-                // Saves the highest number of connections made
-                if (pieceCounts > mostConnected)
-                {
-                    mostConnected = pieceCounts;
-                }
-            }
-
-            // The heuristic value of how long connections are
-            // The larger the connection made, the bigger change to value.
-            // A draw/in play could range from 0.4 to 0.6 instead of only 0.5
-            // This makes better moves more valuable and gives the winrate calculating
-            // in CalculateUCT be more accurate
-            double[] heuristicValues = [0, 0.05, 0.15];
-
-            if (mostConnected >= 4)
-            {
-                // If the game has ended and the winner is clear
-                if (node.turn == inputCache.turn) return ("W", 1);
-                else return ("L", 0);
-            }
-
-            // Get the heuristic change to make
-            double heuristicChange = heuristicValues[mostConnected - 1];
-            // Return the general state of the game and the heuristic
-            if (GameBoard.ValidMoves(node.grid).Count == 0) return ("D", 0.5 + heuristicChange);
-            else return ("IP", 0.5 + heuristicChange);
-        }
+        //public static (string endState, double value) MoveResult(string[,] grid, int[] move, string moveTurn)
+        //{
+        //    Node translatedNode = new Node(grid, moveTurn, move, null);
+        //    var resultCache = MoveResult(translatedNode);
+        //    return resultCache;
+        //}
     }
 }
