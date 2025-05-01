@@ -1,13 +1,12 @@
 ﻿using Connect4_BotApp.API;
-using Connect4_BotApp.Backend;
 
 namespace Connect4_BotApp
 {
     // Stores function related to the node and tree
     internal class Node
     {
-        // A total of the results from playouts (+= 1 from win, += 0.5 from draw)
-        public double resultPoints = 0;
+        // A total from the heuristics produced by HeuristicManager
+        public double rewardPoints = 0;
         // Represents the total playouts
         public int simCount = 0;
 

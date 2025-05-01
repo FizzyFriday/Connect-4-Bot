@@ -1,6 +1,4 @@
 ﻿using Connect4_BotApp.API;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 
 
 namespace Connect4_BotApp
@@ -25,11 +23,7 @@ namespace Connect4_BotApp
         {
             currentTurn = currentPlayerTurn;
 
-            // Quick response - remove since this should only be used for root?
-            int bestCol = QuickBestResponse(node.grid, node.move);
-            if (bestCol != -1) return bestCol;
-
-            // Main heuristics
+            // Main heuristics here
             return -1;
         }
 

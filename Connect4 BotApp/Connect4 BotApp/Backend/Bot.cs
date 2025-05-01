@@ -114,24 +114,26 @@ namespace Connect4_BotApp.Backend
             if (node != root) Console.WriteLine("Success");
 
             // Gets the result of the game after the move
-            var resultAndValue = MoveResult(node);
-            node.postMoveState = resultAndValue.endState;
-            double value = resultAndValue.value;
+            node.postMoveState = HeuristicManager.EndState(node.grid, node.move, node.turn);
+
+            // Gets the reward from making this move
+            double reward = HeuristicManager.GetHeuristics(node, inputCache.turn);
+            node.rewardPoints += reward;
             node.AddToTree();
 
             // SIMULATE
             // If not a game ending node, simulate
             if (node.postMoveState == "IP")
             {
-                value = Rollout(node);
+                reward = Rollout(node);
             }
 
-            // BACKPROGATE
+            // BACKPROGATE - Send the reward points up the tree
             while (node.parentNode != null)
             {
                 // Save the result to each node
                 node.simCount++;
-                node.resultPoints += value;
+                node.rewardPoints += reward;
                 // Move up to parent
                 node = node.parentNode;
             }
@@ -141,7 +143,6 @@ namespace Connect4_BotApp.Backend
         private static double Rollout(Node node)
         {
             Node rolled = node;
-            Console.WriteLine("Rollout");
 
             // Runs until a node has no moves it can do
             while (GameBoard.ValidMoves(rolled.grid).Count > 0)
@@ -149,13 +150,16 @@ namespace Connect4_BotApp.Backend
                 // Moves to a random potential child
                 rolled = rolled.GetRandPotential();
 
-                // Gets the state of the game after node
-                var resultAndHeuristic = MoveResult(rolled);
+                // Guide which moves to take by using heuristics of options
+                // Perhaps choose random from the top 3 nodes?
 
-                // Game ending, return result
-                if (resultAndHeuristic.endState != "IP") return resultAndHeuristic.value;
+                // Gets the state of the game after node
+                double randomReward = HeuristicManager.GetHeuristics(node, inputCache.turn);
+
+                // A win or loss
+                if (randomReward == 1) return randomReward;
+                if (randomReward == 0) return randomReward;
             }
-            Console.WriteLine("Ran");
             return 0;
         }
 

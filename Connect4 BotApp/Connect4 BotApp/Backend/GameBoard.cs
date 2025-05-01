@@ -1,5 +1,4 @@
 ﻿using Connect4_BotApp.API;
-using Connect4_BotApp.Backend;
 
 namespace Connect4_BotApp
 {
@@ -46,7 +45,7 @@ namespace Connect4_BotApp
 
             // Make move and return results
             grid[move[0], move[1]] = turn;
-            string state = Bot.MoveResult(grid, move, turn).endState;
+            string state = HeuristicManager.EndState(grid, move, turn);
             if (state == "IP") return (grid, true);
             else return (grid, false);
         }
@@ -70,9 +69,12 @@ namespace Connect4_BotApp
             return null;
         }
 
+        // Checks if a column is an allowed move
         public static bool ValidateCol(string[,] grid, int col)
         {
             List<int[]> ValidMoves = GameBoard.ValidMoves(grid);
+
+            // Run through all possible moves. If the column is allowed return true
             foreach (int[] possibleMove in ValidMoves)
             {
                 if (col == possibleMove[0]) return true;
