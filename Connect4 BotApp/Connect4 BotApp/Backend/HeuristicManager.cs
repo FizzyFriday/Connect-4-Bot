@@ -1,4 +1,6 @@
 ﻿using Connect4_BotApp.API;
+using System.Net.Http.Headers;
+
 
 namespace Connect4_BotApp
 {
@@ -16,16 +18,66 @@ namespace Connect4_BotApp
         // Runs all the heuristic calls and returns results
         public static double GetHeuristics(Node node)
         {
-
-
             return -1;
+        }
+
+        // Returns the game state after a node's move
+        // moveByWho - if the move would be a win if current player
+        // played the move, or if set to enemy player's a loss for the current player if
+        // enemy played the move
+        public static string EndState(string[,] grid, string moveByWho, string currentTurn)
+        {
+            int largestConnection = ConnectHeuristic(grid, moveByWho);
+
+            if (largestConnection >= 4)
+            {
+                // Connect 4 move played by current player
+                if (moveByWho == currentTurn) return "W";
+                // Connect 4 move played by other player
+                else return "L";
+            }
+            else if (GameBoard.ValidMoves(node.grid).Count == 0) return "D";
+            // Still in play
+            else return "IP";
+        }
+
+        // Returns best move if Win in 1 or Loss in 1
+        // Use sparingly, preferably only on Root
+        public static int GetObviousBest(Node node, string currentTurn)
+        {
+            // Grabs all possible moves
+            List<int[]> possible = GameBoard.ValidMoves(node.grid);
+            int bestCol = -1;
+
+            // Run through each move
+            foreach (int[] possibleMove in possible)
+            {
+                // Loss checking
+                string enemyTurn = "O";
+                if (currentTurn == "O") enemyTurn = "X";
+                // Get the move result cache
+
+                Node possibleChild = node.CreateChild(possibleMove); // CreateChild needs to change to input turn
+                string endState = EndState(possibleChild, enemyTurn);
+
+                // The win is a win for the enemy, or defeat
+                if (endState == "L") bestCol = possibleMove[0];
+
+                // Win checking for current player
+                endState = EndState(possibleChild, currentTurn);
+                if (endState == "W") return possibleMove[0];
+            }
+            return bestCol;
         }
 
 
 
-        // Returns endStae from move and the connection made
+        // PRIVATE METHODS
+
+        // Returns endState from move and the connection made
+        // playedByWho - The turn of player making move,
         // currentTurn - Turn of the current player, which doesnt change at any point
-        public static string EndState(Node node, string currentTurn)
+        private static int ConnectHeuristic(string[,] grid, string playedByWho)
         {
             int gridMaxCol = node.grid.GetLength(0) - 1;
             int gridMaxRow = node.grid.GetLength(1) - 1;
@@ -85,10 +137,6 @@ namespace Connect4_BotApp
                 }
             }
 
-            if (mostConnected >= 4 && node.turn != currentTurn) return "L";
-            else if (mostConnected >= 4 && node.turn == currentTurn) return "L";
-            else if (GameBoard.ValidMoves(node.grid).Count == 0) return "D";
-            else return "IP";
             return mostConnected;
 
             // The heuristic value of how long connections are
@@ -111,32 +159,5 @@ namespace Connect4_BotApp
             //if (GameBoard.ValidMoves(node.grid).Count == 0) return ("D", 0.5 + heuristicChange);
             //else return ("IP", 0.5 + heuristicChange);
         }
-
-        /*
-        private static int GetObviousBest(Node root)
-        {
-            // Grabs all possible moves
-            List<int[]> possible = root.gameGrid.GetValidMoves();
-            int bestCol = -1;
-
-            // Run through each move
-            foreach (int[] possibleMove in possible)
-            {
-                // Loss checking
-                string enemyTurn = "O";
-                if (turn == "O") enemyTurn = "X";
-                // Get the move result cache
-                var result = MoveResult(possibleMove, enemyTurn);
-
-                // The win is a win for the enemy, or defeat
-                if (result.endState == "L") bestCol = possibleMove[0];
-
-                // Win checking
-                result = MoveResult(possibleMove, turn);
-                if (result.endState == "W") return possibleMove[0];
-            }
-            return bestCol;
-        }
-        */
     }
 }
