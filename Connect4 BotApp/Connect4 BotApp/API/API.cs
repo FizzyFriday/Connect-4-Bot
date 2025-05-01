@@ -25,6 +25,20 @@ namespace Connect4_BotApp.API
             return GameBoard.MakeMove(grid, turn, col);
         }
 
+        public static int[] ColumnToMove(string[,] grid, int col)
+        {
+            int[]? move = GameBoard.TranslateColToMove(grid, col);
+            // If the column couldn't be translated to a  move
+            if (move == null)
+            {
+                DisplayMessage("Error - Column not valid");
+                return null;
+            }
+            return move;
+        }
+
+
+
         // Only method the backend is allowed to call in API, and only method 
         // allowed to use GameController. Used for debugging
         public static void DisplayMessage(string msg)

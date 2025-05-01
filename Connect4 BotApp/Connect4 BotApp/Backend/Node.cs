@@ -1,4 +1,5 @@
 ﻿using Connect4_BotApp.API;
+using Connect4_BotApp.Backend;
 
 namespace Connect4_BotApp
 {
@@ -54,23 +55,20 @@ namespace Connect4_BotApp
         {
             // Impacts if UCT will favour high winrate, or exploration
             double explorationParameter = Math.Sqrt(2);
-
-            // If simCount != 0, set selfSims to simCount. Else, set it to 1
             int selfSims = (simCount == 0) ? 1 : simCount;
 
-            // Gets the value of win rate
-            double winPref = resultPoints / selfSims;
+            // Calculates exploitation part of UCT formula
+            double rewardPref = rewardPoints / selfSims;
 
-            // Epsilon removes the possibility of Log(1) happening, which produces 0
+            // Calculates exploration part of UCT formula
             const double epsilon = 1e-6;
             // If parent isnt null, set pSims to the simCount of parent. Else, set it to the same value as selfSims
             double pSims = (this.parentNode != null) ? this.parentNode.simCount : selfSims;
             if (pSims == 0) pSims = 1;
-
             double naturalLog = Math.Log(pSims + epsilon);
-            // Gets the value of exploration
-            double explorePref = explorationParameter * Math.Sqrt(naturalLog / selfSims);
-            return winPref + explorePref;
+            double explorationPref = explorationParameter * Math.Sqrt(Math.Log(pSims + epsilon) / selfSims);
+
+            return rewardPref + explorationPref;
         }
 
         // Chooses a random child from potential children - Used in rollout
@@ -126,14 +124,11 @@ namespace Connect4_BotApp
                 throw new Exception();
             }
 
-            // References parent node
-            Node parent = this.parentNode;
-            // Adds to tree
-            parent.children.Add(this);
+            this.parentNode.children.Add(this);
 
             // Since when adding to tree, this is no longer a *potential* child, 
             // it would be removed from the list of potentialChildren
-            parent.potentialChildren.Remove(this.move);
+            this.parentNode.potentialChildren.Remove(this.move);
         }
 
 

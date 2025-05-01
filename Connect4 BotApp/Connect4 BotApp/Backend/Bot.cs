@@ -32,7 +32,6 @@ namespace Connect4_BotApp.Backend
         // Manages and deals with results of MCTS
         private static int MCTSmanager()
         {
-            Console.WriteLine("Begin");
             root = new Node(inputCache.grid, inputCache.turn);
 
             int MCTScycles = 0;
@@ -208,17 +207,5 @@ namespace Connect4_BotApp.Backend
 
             return best;
         }
-
-
-        // How MoveResult is called by Bot and other classes should be simplified
-        // Move it into HeuristicManager?
-
-        // Calls MoveResult, providing the necessary data as a Node. Used by other components
-        //public static (string endState, double value) MoveResult(string[,] grid, int[] move, string moveTurn)
-        //{
-        //    Node translatedNode = new Node(grid, moveTurn, move, null);
-        //    var resultCache = MoveResult(translatedNode);
-        //    return resultCache;
-        //}
     }
 }
