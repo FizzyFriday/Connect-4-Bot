@@ -29,19 +29,19 @@ namespace Connect4_BotApp
 
 
         // Root constructor
-        public Node(string[,] grid, string turn)
+        public Node(GameSit situation)
         {
-            this.grid = grid;
-            this.turn = turn;
+            this.grid = situation.grid;
+            this.turn = situation.turn;
             this.potentialChildren = GameBoard.ValidMoves(grid);
             this.postMoveState = "IP"; // Since this is the root, the game must be in play
         }
 
         // Regular constructor
-        public Node(string[,] grid, string turn, int[] move, Node? parentNode)
+        public Node(GameSit situation, int[] move, Node? parentNode)
         {
-            this.grid = grid;
-            this.turn = turn;
+            this.grid = situation.grid;
+            this.turn = situation.turn;
             this.potentialChildren = GameBoard.ValidMoves(grid);
             this.move = move;
             this.parentNode = parentNode;

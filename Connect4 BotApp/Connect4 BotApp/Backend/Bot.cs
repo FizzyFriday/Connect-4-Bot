@@ -1,6 +1,16 @@
 ﻿using Connect4_BotApp.API;
 using System.Diagnostics;
 
+
+// To Do:
+// Complete integrating HeuristicManager
+// Once the bot works again, merge with Main
+// Displaying runtimes and call counts of most intense functions
+//      GetBestChild, EndState (/ ConnectionHeuristic), Rollout, QuickBestResponse
+
+// Improve heuristics to improve bot intelligence
+
+
 namespace Connect4_BotApp.Backend
 {
     // Handles MCTS logic / tree searching
@@ -10,7 +20,7 @@ namespace Connect4_BotApp.Backend
 
         // Contains the information from API
         // Removes the need for calling every method with this information as parameters
-        private static (string[,] grid, string turn) inputCache = new();
+        private static GameSit boardPlay;
 
         // Contains root of tree. The reference helps with Node.IsInTree method
         public static Node? root;
@@ -20,7 +30,7 @@ namespace Connect4_BotApp.Backend
         // Starts the bot's search
         public static int StartBot(string[,] grid, string turn)
         {
-            inputCache = (grid, turn);
+            boardPlay = new GameSit(grid, turn);
             int bestCol = MCTSmanager();
             return bestCol;
         }

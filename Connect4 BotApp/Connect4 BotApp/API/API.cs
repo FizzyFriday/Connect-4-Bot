@@ -33,8 +33,6 @@ namespace Connect4_BotApp.API
             return GameBoard.MakeMove(grid, turn, move);
         }
 
-
-
         // Only method the backend is allowed to call in API, and only method 
         // allowed to use GameController. Used for debugging
         public static void DisplayMessage(string msg)
